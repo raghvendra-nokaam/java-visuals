@@ -20,6 +20,14 @@ describe("narration.md", () => {
     expect(narration[0]!.text).toBe("First line continues.\n\nSecond paragraph.");
   });
 
+  it("scopes narration and prompts to a Variant", () => {
+    const { narration, prompts } = parseNarration(
+      "## @a jvm in mutate\n\nx\n\n## Predict @a in mutate\n\nQ?\n\n- [x] one\n- [ ] two\n\n> why\n",
+    );
+    expect(narration[0]).toMatchObject({ at: "a", detail: "jvm", variant: "mutate" });
+    expect(prompts[0]).toMatchObject({ at: "a", variant: "mutate" });
+  });
+
   it.each([
     ["stray text before headings", "hello\n## @start\n\nx\n", /before the first/],
     ["unknown heading", "## Intro\n\ntext\n", /unrecognised heading/],
@@ -28,6 +36,7 @@ describe("narration.md", () => {
     ["two correct answers", "## Predict @a\n\nQ?\n\n- [x] one\n- [x] two\n\n> why\n", /more than one/],
     ["missing explanation", "## Predict @a\n\nQ?\n\n- [x] one\n- [ ] two\n", /explanation/],
     ["duplicate narration", "## @a\n\nx\n\n## @a\n\ny\n", /appears twice/],
+    ["duplicate prompt", "## Predict @a\n\nQ?\n\n- [x] 1\n- [ ] 2\n\n> w\n\n## Predict @a\n\nQ?\n\n- [x] 1\n- [ ] 2\n\n> w\n", /appears twice/],
   ])("rejects %s", (_, source, error) => {
     expect(() => parseNarration(source)).toThrow(error);
   });

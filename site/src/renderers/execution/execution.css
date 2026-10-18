@@ -162,7 +162,11 @@
   font-style: italic;
 }
 
+/* Layering: Frames, then arrows, then Heap objects, so an arrow leaves its dot visibly but passes
+   under any object it crosses on the way to its target. */
 .object {
+  position: relative;
+  z-index: 2;
   min-width: 8rem;
   background: var(--heap-tint);
   border: 2px solid var(--heap);
@@ -172,7 +176,7 @@
 
 .object[data-state="eligible"],
 .object[data-state="collected"] {
-  background: transparent;
+  background: var(--paper);
   border-style: dashed;
   border-color: var(--eligible);
 }
@@ -293,6 +297,7 @@
 
 .arrows {
   position: absolute;
+  z-index: 1;
   inset: 0;
   pointer-events: none;
   overflow: visible;

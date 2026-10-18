@@ -1,8 +1,8 @@
-import { useLayoutEffect, useRef, useState, type ReactNode, type RefObject } from "react";
+import { useLayoutEffect, useMemo, useRef, useState, type ReactNode, type RefObject } from "react";
 import { AnimatePresence, motion } from "motion/react";
 import type { Frame, HeapObject, Step, Trace, Variable } from "@java-visuals/trace-schema";
 import type { DetailLevel } from "../../player/script";
-import { frameTitle, shortType, slot, stripMarkers, visibleHeap } from "./model";
+import { classFiles, frameTitle, shortType, slot, stripMarkers, visibleHeap } from "./model";
 import "./execution.css";
 
 interface Props {
@@ -102,8 +102,13 @@ function CodePanel({
   onHoverLine: (line: number | null) => void;
 }) {
   const file = trace.source.find((f) => f.path === step.location.file) ?? trace.source[0]!;
+  const filesByClass = useMemo(() => classFiles(trace), [trace]);
   const callSites = new Set(
-    step.threads.flatMap((t) => t.frames.slice(0, -1).map((f) => f.line)).filter((l) => l !== step.location.line),
+    step.threads
+      .flatMap((t) => t.frames.slice(0, -1))
+      .filter((f) => filesByClass.get(f.className) === file.path)
+      .map((f) => f.line)
+      .filter((l) => l !== step.location.line),
   );
   return (
     <section className="code" aria-label={`Source: ${file.path}`}>

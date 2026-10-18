@@ -1,0 +1,12 @@
+title: Pass-by-value
+kind: execution
+order: 3
+summary: Java copies every argument into the called method's Frame. Find out why changing a parameter sometimes reaches the caller and sometimes doesn't.
+prerequisites:
+  - memory/objects-and-references
+detail: simple
+variants:
+  - id: default
+    label: Reassign the parameter
+  - id: mutate
+    label: Change the object through it

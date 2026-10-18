@@ -1,0 +1,10 @@
+title: When objects become eligible
+kind: execution
+order: 4
+summary: Three ways an object loses its last Reference, including two objects that only point at each other.
+prerequisites:
+  - memory/objects-and-references
+detail: simple
+variants:
+  - id: default
+    label: As written

@@ -39,8 +39,13 @@ export function loadExecutionLesson(lesson: LessonEntry): ExecutionLessonData {
   if (source === undefined) throw new Error(`${lesson.id}: missing narration.md`);
   const script: LessonScript = { title: lesson.data.title, ...parseNarration(source, `lessons/${lesson.id}/narration.md`) };
 
+  for (const entry of [...script.narration, ...script.prompts]) {
+    if (entry.variant && !(entry.variant in variants)) {
+      throw new Error(`${lesson.id}: narration.md mentions Variant "${entry.variant}", which lesson.yaml doesn't list`);
+    }
+  }
   for (const [id, trace] of Object.entries(variants)) {
-    const missing = unresolvedAnchors(script, trace);
+    const missing = unresolvedAnchors(script, trace, id);
     if (missing.length) {
       throw new Error(`${lesson.id} [${id}]: narration.md refers to Markers the Lesson Program doesn't have: ${missing.join(", ")}`);
     }

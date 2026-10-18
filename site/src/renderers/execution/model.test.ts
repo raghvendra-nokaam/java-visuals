@@ -1,7 +1,7 @@
 import { describe as group, expect, it } from "vitest";
 import type { Trace } from "@java-visuals/trace-schema";
 import fixture from "@java-visuals/trace-schema/fixtures/method-calls.json";
-import { describe, frameTitle, slot, stripMarkers, visibleHeap } from "./model";
+import { classFiles, describe, frameTitle, slot, stripMarkers, visibleHeap } from "./model";
 
 const trace = fixture as unknown as Trace;
 const step = (i: number) => trace.steps[i]!;
@@ -24,6 +24,10 @@ group("execution model", () => {
     expect(stripMarkers("        int result = a + b; // @mark add-compute")).toBe("        int result = a + b;");
     expect(stripMarkers("    } // @mark end")).toBe("    }");
     expect(stripMarkers("int x = 2; // a normal comment")).toBe("int x = 2; // a normal comment");
+  });
+
+  it("learns which file each class lives in", () => {
+    expect(Object.fromEntries(classFiles(trace))).toEqual({ Program: "Program.java", Point: "Program.java" });
   });
 
   it("titles constructor Frames as new", () => {

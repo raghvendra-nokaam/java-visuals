@@ -26,6 +26,26 @@ describe("lesson script", () => {
     expect([...promptsByStep(lesson, trace).keys()].sort((a, b) => a - b)).toEqual([2, 6, 11]);
   });
 
+  it("Variant-specific entries win at the same anchor, and only in their Variant", () => {
+    const scoped: LessonScript = {
+      title: "t",
+      narration: [
+        { at: "add-compute", text: "generic" },
+        { at: "add-compute", detail: "jvm", text: "jvm" },
+        { at: "add-compute", variant: "other", text: "other" },
+      ],
+      prompts: [
+        { at: "add-compute", question: "generic?", choices: ["a", "b"], answer: 0, explanation: "" },
+        { at: "add-compute", variant: "other", question: "other?", choices: ["a", "b"], answer: 0, explanation: "" },
+      ],
+    };
+    expect(narrationAt(scoped, trace, 3, "jvm", "default")?.text).toBe("jvm");
+    expect(narrationAt(scoped, trace, 3, "jvm", "other")?.text).toBe("other");
+    expect(promptsByStep(scoped, trace, "default").get(3)?.question).toBe("generic?");
+    expect(promptsByStep(scoped, trace, "other").get(3)?.question).toBe("other?");
+    expect(unresolvedAnchors({ ...scoped, narration: [{ at: "nope", variant: "other", text: "" }] }, trace, "default")).toEqual([]);
+  });
+
   it("switching Variant lands on the same Marker, else Step 0", () => {
     const other: Trace = { ...trace, markers: { "add-compute": 5 } };
     expect(variantSwitchTarget(trace, 4, other)).toBe(5); // passed add-compute (3), the latest Marker

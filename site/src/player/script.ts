@@ -21,11 +21,14 @@ export interface Narration {
   at: string;
   /** Only shown at this Detail Level; entries without it apply to both. */
   detail?: DetailLevel;
+  /** Only shown in this Variant; entries without it apply to all. */
+  variant?: string;
   text: string;
 }
 
 export interface PredictPrompt {
   at: string;
+  variant?: string;
   question: string;
   choices: string[];
   answer: number;
@@ -37,32 +40,47 @@ export function resolveAnchor(trace: StepSource, at: string): number | undefined
   return at === "start" ? 0 : trace.markers[at];
 }
 
-/** The Narration in effect at a Step: the latest anchor at or before it, preferring the level-specific entry. */
-export function narrationAt(script: LessonScript, trace: StepSource, index: number, level: DetailLevel): Narration | undefined {
-  let best: { step: number; entry: Narration } | undefined;
+/**
+ * The Narration in effect at a Step: the latest anchor at or before it. At the same anchor the most specific
+ * entry wins (Variant-specific, then Detail-Level-specific, then generic).
+ */
+export function narrationAt(
+  script: LessonScript,
+  trace: StepSource,
+  index: number,
+  level: DetailLevel,
+  variant = "default",
+): Narration | undefined {
+  let best: { step: number; score: number; entry: Narration } | undefined;
   for (const entry of script.narration) {
-    if (entry.detail && entry.detail !== level) continue;
+    if ((entry.detail && entry.detail !== level) || (entry.variant && entry.variant !== variant)) continue;
     const step = resolveAnchor(trace, entry.at);
     if (step === undefined || step > index) continue;
-    const better = !best || step > best.step || (step === best.step && entry.detail !== undefined);
-    if (better) best = { step, entry };
+    const score = (entry.variant ? 2 : 0) + (entry.detail ? 1 : 0);
+    if (!best || step > best.step || (step === best.step && score > best.score)) best = { step, score, entry };
   }
   return best?.entry;
 }
 
-/** Step index → the Predict Prompt that pauses playback there. */
-export function promptsByStep(script: LessonScript, trace: StepSource): Map<number, PredictPrompt> {
+/** Step index → the Predict Prompt that pauses playback there in this Variant. */
+export function promptsByStep(script: LessonScript, trace: StepSource, variant = "default"): Map<number, PredictPrompt> {
   const byStep = new Map<number, PredictPrompt>();
   for (const prompt of script.prompts) {
+    if (prompt.variant && prompt.variant !== variant) continue;
     const step = resolveAnchor(trace, prompt.at);
-    if (step !== undefined) byStep.set(step, prompt);
+    if (step === undefined) continue;
+    // A Variant-specific prompt replaces a generic one at the same Step.
+    if (!byStep.has(step) || prompt.variant) byStep.set(step, prompt);
   }
   return byStep;
 }
 
-/** Anchors in the script that the Trace can't resolve. A content bug; surfaced in tests and the dev console. */
-export function unresolvedAnchors(script: LessonScript, trace: StepSource): string[] {
-  return [...script.narration, ...script.prompts].map((e) => e.at).filter((at) => resolveAnchor(trace, at) === undefined);
+/** Anchors that apply to this Variant but that its Trace can't resolve. A content bug; fails the build. */
+export function unresolvedAnchors(script: LessonScript, trace: StepSource, variant = "default"): string[] {
+  return [...script.narration, ...script.prompts]
+    .filter((e) => !e.variant || e.variant === variant)
+    .map((e) => e.at)
+    .filter((at) => resolveAnchor(trace, at) === undefined);
 }
 
 /**

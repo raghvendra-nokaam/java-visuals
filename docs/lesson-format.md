@@ -69,6 +69,11 @@ Replaces the block above when the Learner has JVM detail on. `simple` works the 
 
 Shown from the call-add Marker's Step onwards.
 
+## @use-box in mutate
+
+Only in the `mutate` Variant. `in <variant>` combines with a Detail Level (`## @start jvm in mutate`).
+When several blocks share an anchor, the most specific one wins: Variant, then Detail Level, then generic.
+
 ## Predict @call-add
 
 What happens on the Stack when `add(x, y)` is called?
@@ -79,6 +84,8 @@ What happens on the Stack when `add(x, y)` is called?
 
 > The explanation shown after the Learner answers.
 ```
+
+`## Predict @marker in <variant>` limits a prompt to one Variant and replaces a generic prompt at the same Marker.
 
 A Predict Prompt pauses playback at its Marker's Step. The Learner has to answer before stepping past it, then sees the explanation and what actually happens. Every anchor must match a Marker in every Variant's Trace.
 

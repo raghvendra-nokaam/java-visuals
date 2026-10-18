@@ -46,16 +46,16 @@ export default function Player<T extends StepSource>({
   const [level, setLevel] = useState<DetailLevel>(defaultLevel);
   const [state, setState] = useState<PlayerState>(() => initialState());
   const data = variants[variantId]!;
-  const prompts = useMemo(() => promptsByStep(script, data), [script, data]);
+  const prompts = useMemo(() => promptsByStep(script, data, variantId), [script, data, variantId]);
   const config = useMemo(() => ({ stepCount: data.steps.length, promptSteps: new Set(prompts.keys()) }), [data, prompts]);
   const dispatch = useCallback((action: PlayerAction) => setState((s) => reduce(s, action, config)), [config]);
   const continueRef = useRef<HTMLButtonElement>(null);
   const firstChoiceRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
-    const missing = unresolvedAnchors(script, data);
+    const missing = unresolvedAnchors(script, data, variantId);
     if (missing.length) console.warn(`Lesson script anchors with no matching Marker: ${missing.join(", ")}`);
-  }, [script, data]);
+  }, [script, data, variantId]);
 
   useEffect(() => {
     if (!state.playing) return;
@@ -117,12 +117,14 @@ export default function Player<T extends StepSource>({
   };
 
   const last = config.stepCount - 1;
-  const narration = narrationAt(script, data, state.index, level);
+  const narration = narrationAt(script, data, state.index, level, variantId);
   const prompt = state.prompt ? prompts.get(state.index) : undefined;
   const waitingPrompt = !state.prompt && prompts.has(state.index) && !state.answered.has(state.index);
   const ticks = [
-    ...script.narration.map((n) => ({ at: resolveAnchor(data, n.at), kind: "narration" as const })),
-    ...script.prompts.map((p) => ({ at: resolveAnchor(data, p.at), kind: "prompt" as const })),
+    ...script.narration
+      .filter((n) => !n.variant || n.variant === variantId)
+      .map((n) => ({ at: resolveAnchor(data, n.at), kind: "narration" as const })),
+    ...[...prompts.keys()].map((at) => ({ at, kind: "prompt" as const })),
   ].filter((t): t is { at: number; kind: "narration" | "prompt" } => t.at !== undefined && t.at > 0);
 
   return (

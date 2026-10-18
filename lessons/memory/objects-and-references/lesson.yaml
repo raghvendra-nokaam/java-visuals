@@ -1,0 +1,10 @@
+title: Objects and References
+kind: execution
+order: 2
+summary: Two variables can point at the same object. See what that means when one of them changes it.
+prerequisites:
+  - memory/method-calls
+detail: simple
+variants:
+  - id: default
+    label: As written

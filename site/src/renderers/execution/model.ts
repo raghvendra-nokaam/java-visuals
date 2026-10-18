@@ -1,4 +1,4 @@
-import type { HeapObject, Step, Value, Frame } from "@java-visuals/trace-schema";
+import type { HeapObject, Step, Value, Frame, Trace } from "@java-visuals/trace-schema";
 import type { DetailLevel } from "../../player/script";
 
 /** How one slot (local, field, element) is drawn. */
@@ -81,4 +81,18 @@ export function describe(step: Step, level: DetailLevel): string {
   const output = step.events.find((e) => e.type === "output");
   if (output && "text" in output) parts.push(`Printed: ${output.text.trim()}.`);
   return parts.join(" ");
+}
+
+/**
+ * Which source file each class lives in, learned from Steps where that class's Frame is executing.
+ * Frames record only their class and line, so this is what lets the code panel mark call sites in the right file.
+ */
+export function classFiles(trace: Trace): Map<string, string> {
+  const files = new Map<string, string>();
+  for (const step of trace.steps) {
+    const active = step.threads.find((t) => t.id === step.activeThread);
+    const top = active?.frames.at(-1);
+    if (top && !files.has(top.className)) files.set(top.className, step.location.file);
+  }
+  return files;
 }

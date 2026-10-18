@@ -47,6 +47,7 @@ If Trace files get too large, version 2 may switch to keyframes plus deltas. Les
 - **`inline: true`** (Strings, boxed primitives): at Simple level, draw References to it as its `display` text instead of an arrow. At JVM level, draw it as a normal Object.
 - **In flight:** an Object held only on the JVM operand stack (a `new` whose result hasn't been stored yet, or a value just returned from a method) is still `live`. The rule: an Object that was reachable at any point while the active Frame has been executing its current line stays live until that line finishes.
 - A JDK Internal that leaves the Lesson Program's reach is **removed** from the Heap rather than marked `eligible`. The JDK may still hold it (e.g. `ArrayList`'s shared empty array), so we can't claim it's garbage.
+- String literals are interned by the JVM, which keeps them reachable from its string table. The recorder can't tell a literal from a runtime-built String, so Strings follow normal reachability. At the JVM Detail Level, a literal held only by an Eligible object is shown as Eligible too.
 - **`state`**: `live` → `eligible` (no longer reachable; drawn greyed, still present) → `collected` (only in Lessons that script a GC). ✔ State never goes backwards.
 - `allocatedAt` is the Lesson Program line whose `new` (or literal) created the Object, and it drives linked highlighting.
 - `monitor` is present only while the lock is owned or contended.

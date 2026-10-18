@@ -40,6 +40,7 @@ const pipeline = lesson.data.kind === "pipeline" ? loadPipelineLesson(lesson) : 
     <span aria-hidden="true">/</span>
     <a href={trackHref(track.id)}>{track.title}</a>
   </nav>
+  <main>
   {
     execution && (
       <ExecutionLesson
@@ -55,6 +56,7 @@ const pipeline = lesson.data.kind === "pipeline" ? loadPipelineLesson(lesson) : 
   }
   {timeline && <TimelineLesson client:load lessonId={lesson.id} timeline={timeline.timeline} script={timeline.script} next={nextLink} />}
   {pipeline && <PipelineLesson client:load lessonId={lesson.id} data={pipeline.data} script={pipeline.script} next={nextLink} />}
+  </main>
 </Base>
 
 <style>

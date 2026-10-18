@@ -12,7 +12,8 @@
     "generate": "json2ts -i schema/trace.schema.json -o src/trace.generated.ts --unreachableDefinitions --no-additionalProperties --bannerComment \"/* Generated from schema/trace.schema.json by json-schema-to-typescript. Do not edit; run npm run generate. */\"",
     "build": "npm run generate && tsc --noEmit",
     "validate": "tsx scripts/validate.ts",
-    "test": "npm run build && npm run validate"
+    "test": "npm run build && npm run validate",
+    "steps": "tsx scripts/steps.ts"
   },
   "dependencies": {
     "ajv": "^8.20.0"

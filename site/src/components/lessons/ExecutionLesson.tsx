@@ -16,5 +16,5 @@ export default function ExecutionLesson({
   defaultLevel: DetailLevel;
   next?: { title: string; href: string };
 }) {
-  return <Player {...props} renderer={executionRenderer} offersJvmDetail onReachEnd={() => markCompleted(lessonId)} />;
+  return <Player {...props} renderer={executionRenderer} offersJvmDetail smallScreenNote onReachEnd={() => markCompleted(lessonId)} />;
 }

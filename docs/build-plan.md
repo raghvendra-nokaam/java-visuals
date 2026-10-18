@@ -2,6 +2,8 @@
 
 Vocabulary follows [CONTEXT.md](../CONTEXT.md). Key decisions: [ADR-0001](adr/0001-pre-recorded-traces.md), [ADR-0002](adr/0002-author-defined-schedules-for-concurrency.md).
 
+**Status (2026-10-18):** Phases 0–8 are done, so v1 is complete. The next work is under "v2 and later" below. One deviation from the plan: the Execution renderer draws Frames and Objects as HTML with an SVG layer for References, rather than all-SVG, which made text layout, linked highlighting and accessibility simpler.
+
 **v1 scope:** History Track (Timeline), "How Java runs your code" (Pipeline), 3–4 Memory Execution Lessons. Concurrency is v2 — but the Trace format is designed for multiple Stacks from day one.
 
 **Guiding rule:** build the riskiest pieces first. The recorder and the Trace format are the foundation; if they're wrong, everything on top is wrong. History content is low-risk and comes after the Player works.

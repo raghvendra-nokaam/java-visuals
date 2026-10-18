@@ -24,6 +24,8 @@ interface Props<T extends StepSource> {
   defaultLevel: DetailLevel;
   /** Whether this Lesson has JVM-level content worth switching to. */
   offersJvmDetail: boolean;
+  /** Show the "easier on a larger screen" note on phones (Execution Lessons, whose diagrams need width). */
+  smallScreenNote?: boolean;
   /** Called once the Learner reaches the last Step. */
   onReachEnd?: () => void;
   next?: { title: string; href: string };
@@ -41,6 +43,7 @@ export default function Player<T extends StepSource>({
   offersJvmDetail,
   onReachEnd,
   next,
+  smallScreenNote = false,
 }: Props<T>) {
   const variantIds = Object.keys(variants);
   const [variantId, setVariantId] = useState(variantIds[0]!);
@@ -70,8 +73,11 @@ export default function Player<T extends StepSource>({
   }, [atEnd, onReachEnd]);
 
   useEffect(() => {
-    if (state.prompt?.phase === "asking") firstChoiceRef.current?.focus();
-    if (state.prompt?.phase === "revealed") continueRef.current?.focus();
+    // Bring the prompt into view before focusing it: on a phone it can sit below the fold.
+    const target = state.prompt?.phase === "asking" ? firstChoiceRef.current : state.prompt ? continueRef.current : null;
+    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    target?.closest(".prompt")?.scrollIntoView({ block: "nearest", behavior: reduceMotion ? "auto" : "smooth" });
+    target?.focus({ preventScroll: true });
   }, [state.prompt]);
 
   useEffect(() => {
@@ -159,7 +165,7 @@ export default function Player<T extends StepSource>({
           </div>
         </header>
 
-        <p className="small-screen-note">This lesson is easiest to follow on a tablet or larger screen.</p>
+        {smallScreenNote && <p className="small-screen-note">This lesson is easiest to follow on a tablet or larger screen.</p>}
 
         <renderer.View
           data={data}
@@ -242,7 +248,7 @@ export default function Player<T extends StepSource>({
             Step {state.index + 1} of {config.stepCount}
           </span>
 
-          <label className="option">
+          <label className="option option-speed">
             <span>Speed</span>
             <select value={state.speed} onChange={(e) => dispatch({ type: "speed", speed: Number(e.target.value) })}>
               {SPEEDS.map((s) => (

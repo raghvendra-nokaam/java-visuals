@@ -11,7 +11,8 @@
     "validate": "npm run validate -w trace-schema",
     "check": "npm run build -w trace-schema && npm run validate && npm run check -w site",
     "record": "recorder/gradlew -p recorder run -q --args=\"record-all lessons\"",
-    "test": "npm test -w site && recorder/gradlew -p recorder test -q"
+    "test": "npm test -w site && recorder/gradlew -p recorder test -q",
+    "steps": "npm run steps -w trace-schema --"
   },
   "engines": {
     "node": ">=22.22.0"

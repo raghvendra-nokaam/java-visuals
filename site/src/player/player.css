@@ -1,3 +1,8 @@
+/* Keep focused or scrolled-to content clear of the sticky playback bar. */
+html:has(.controls) {
+  scroll-padding-bottom: 9rem;
+}
+
 .player {
   max-width: 90rem;
   margin: 0 auto;
@@ -294,6 +299,43 @@ select {
 
   .small-screen-note {
     display: block;
+  }
+
+  /* Two rows instead of three: buttons, count and speed, then the scrubber. */
+  .controls {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    gap: 0.5rem 0.75rem;
+    padding: 0.5rem 1rem 0.75rem;
+  }
+
+  .scrubber {
+    grid-column: 1 / -1;
+    grid-row: 2;
+  }
+
+  .step-count {
+    min-width: 0;
+    font-size: 0.875rem;
+    text-align: right;
+  }
+
+  .option-speed span {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+  }
+
+  .icon-button {
+    width: 2.25rem;
+    height: 2.25rem;
+  }
+
+  .icon-button[data-primary] {
+    width: 2.75rem;
+    height: 2.75rem;
   }
 
   .lesson-title {

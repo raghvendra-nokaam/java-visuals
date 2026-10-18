@@ -196,8 +196,15 @@
   color: var(--heap);
 }
 
-.object[data-state="eligible"] .object-type {
+/* Eligible objects read as faded through outline and colour, not opacity, so their text keeps full contrast. */
+.object[data-state="eligible"] .object-type,
+.object[data-state="eligible"] .var dd {
   color: var(--ink-soft);
+}
+
+.object[data-state="eligible"] .slot {
+  background: transparent;
+  border-style: dashed;
 }
 
 .object-display {
@@ -320,6 +327,12 @@
 
   .memory {
     min-height: 0;
+  }
+
+  /* Stacked layout: cap the code so the memory diagram stays close; the current line is kept in view. */
+  .code-lines {
+    max-height: 15rem;
+    overflow-y: auto;
   }
 }
 

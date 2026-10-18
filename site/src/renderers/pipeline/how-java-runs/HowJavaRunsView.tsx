@@ -275,7 +275,8 @@ function Listing({ title, lines }: { title: string; lines: string[] }) {
   return (
     <figure className="hjr-listing">
       <figcaption>{title}</figcaption>
-      <pre>
+      {/* Focusable so keyboard users can scroll long lines. */}
+      <pre tabIndex={0} aria-label={title}>
         <code>{lines.join("\n").trimEnd()}</code>
       </pre>
     </figure>
@@ -288,7 +289,7 @@ function Bytecode({ method, current }: { method: BytecodeMethod; current?: numbe
       <figcaption>
         <code>{method.header}</code>
       </figcaption>
-      <ol>
+      <ol tabIndex={0} aria-label={`Bytecode for ${method.header}`}>
         {method.instructions.map((ins) => (
           <li key={ins.offset} data-current={ins.offset === current || undefined} aria-current={ins.offset === current ? "step" : undefined}>
             <span className="hjr-offset">{ins.offset}</span>

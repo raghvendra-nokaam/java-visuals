@@ -110,10 +110,22 @@ function CodePanel({
       .map((f) => f.line)
       .filter((l) => l !== step.location.line),
   );
+  const linesRef = useRef<HTMLOListElement>(null);
+  // When the code panel scrolls (stacked layouts), keep the current line visible without moving the page.
+  useLayoutEffect(() => {
+    const list = linesRef.current;
+    const current = list?.querySelector<HTMLElement>('[data-state="current"]');
+    if (!list || !current || list.scrollHeight <= list.clientHeight) return;
+    const top = current.offsetTop - list.offsetTop;
+    if (top < list.scrollTop || top + current.offsetHeight > list.scrollTop + list.clientHeight) {
+      list.scrollTop = top - list.clientHeight / 3;
+    }
+  }, [step, file.path]);
+
   return (
     <section className="code" aria-label={`Source: ${file.path}`}>
       <h2 className="region-title">{file.path}</h2>
-      <ol className="code-lines" onMouseLeave={() => onHoverLine(null)}>
+      <ol className="code-lines" ref={linesRef} tabIndex={0} aria-label={`${file.path}, current line ${step.location.line}`} onMouseLeave={() => onHoverLine(null)}>
         {file.lines.map((text, i) => {
           const line = i + 1;
           const state =
@@ -217,7 +229,7 @@ function ObjectCard({
       data-internal={obj.internal || undefined}
       data-linked={linked || undefined}
       initial={{ opacity: 0, scale: 0.92 }}
-      animate={{ opacity: obj.state === "live" ? 1 : 0.6, scale: 1 }}
+      animate={{ opacity: 1, scale: 1 }}
       exit={{ opacity: 0, scale: 0.92 }}
       onAnimationComplete={onSettle}
       onLayoutAnimationComplete={onSettle}

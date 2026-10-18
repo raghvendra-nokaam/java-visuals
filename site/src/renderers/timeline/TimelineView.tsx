@@ -87,7 +87,7 @@ function StopCard({ stop }: { stop: VersionStop }) {
           {[stop.code.before, stop.code.after].map((sample, i) => (
             <figure key={i} data-side={i === 0 ? "before" : "after"}>
               <figcaption>{sample.label}</figcaption>
-              <pre>
+              <pre tabIndex={0} aria-label={`${sample.label} code`}>
                 <code>{sample.source.trimEnd()}</code>
               </pre>
             </figure>

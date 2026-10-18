@@ -1,0 +1,7 @@
+title: A release every six months
+kind: timeline
+order: 4
+summary: Since 2018 Java ships every March and September. Watch records, pattern matching and virtual threads arrive one release at a time.
+prerequisites:
+  - history/oracle-era
+detail: simple

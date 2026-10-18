@@ -31,8 +31,8 @@ A Lesson structured as stops along Java's version history, each showing what cha
 _Avoid_: History page
 
 **Version Stop**:
-One Java release on a Timeline Lesson. A **Landmark** Version Stop (1.0, 1.2, 5, 8, 9, 11, 17, 21, 25) gets full treatment; others are brief.
-_Avoid_: Milestone, release card
+One point on a Timeline Lesson: a Java release, or a **Turning Point** in Java's history that isn't a release (Oracle buying Sun, the move to six-month releases). A **Landmark** Version Stop (1.0, 1.2, 5, 8, 9, 11, 17, 21, 25) gets full treatment; others are brief.
+_Avoid_: Milestone, release card, event (in UI copy)
 
 **Pipeline Lesson**:
 A Lesson that animates a flow of stages (e.g. source → bytecode → class loading → JIT) with no Lesson Program executing.

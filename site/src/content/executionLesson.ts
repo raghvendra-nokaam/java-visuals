@@ -13,6 +13,13 @@ const narrationFiles = import.meta.glob<string>("../../../lessons/*/*/narration.
   import: "default",
 });
 
+/** A Lesson's narration.md as a LessonScript. */
+export function loadScript(lesson: LessonEntry): LessonScript {
+  const source = narrationFiles[`../../../lessons/${lesson.id}/narration.md`];
+  if (source === undefined) throw new Error(`${lesson.id}: missing narration.md`);
+  return { title: lesson.data.title, ...parseNarration(source, `lessons/${lesson.id}/narration.md`) };
+}
+
 export interface ExecutionLessonData {
   variants: Record<string, Trace>;
   variantLabels: Record<string, string>;
@@ -34,10 +41,7 @@ export function loadExecutionLesson(lesson: LessonEntry): ExecutionLessonData {
     variantLabels[id] = label;
   }
 
-  const narrationPath = `../../../lessons/${lesson.id}/narration.md`;
-  const source = narrationFiles[narrationPath];
-  if (source === undefined) throw new Error(`${lesson.id}: missing narration.md`);
-  const script: LessonScript = { title: lesson.data.title, ...parseNarration(source, `lessons/${lesson.id}/narration.md`) };
+  const script = loadScript(lesson);
 
   for (const entry of [...script.narration, ...script.prompts]) {
     if (entry.variant && !(entry.variant in variants)) {

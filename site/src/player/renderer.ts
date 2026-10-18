@@ -4,7 +4,14 @@ import type { DetailLevel, StepSource } from "./script";
 /** The common Step interface: every Lesson kind plugs into the one Player through this. */
 export interface Renderer<T extends StepSource> {
   /** `explanation` is the Narration / Predict Prompt panel; the renderer places it where it reads best. */
-  View: ComponentType<{ data: T; index: number; level: DetailLevel; explanation: ReactNode }>;
+  View: ComponentType<{
+    data: T;
+    index: number;
+    level: DetailLevel;
+    explanation: ReactNode;
+    /** Jump to a Step, for renderers that let the Learner pick one directly (e.g. a Timeline's rail). */
+    onSeek: (index: number) => void;
+  }>;
   /** Step Description for screen readers. */
   describe(data: T, index: number, level: DetailLevel): string;
 }

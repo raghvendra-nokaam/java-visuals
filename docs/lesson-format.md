@@ -41,6 +41,29 @@ variants:           # optional; defaults to a single "default" Variant
     label: With synchronized
 ```
 
+## timeline.yaml
+
+Timeline Lessons (`kind: timeline`) have a `timeline.yaml` instead of a Lesson Program. Each Version Stop is one Step, and its `id` doubles as the Marker that `narration.md` anchors to:
+
+```yaml
+stops:
+  - id: java-5                  # unique; narration uses ## @java-5
+    version: J2SE 5.0           # as Java named it at the time
+    released: "2004-09-30"      # quoted YYYY-MM-DD; stops must be in date order
+    kind: release               # release (default) | event, shown as a Turning Point
+    landmark: true              # bigger dot and card
+    lts: false                  # long-term support badge
+    headline: The biggest change to the language since 1.0
+    features:                   # `backticks` mark code
+      - Generics, so collections know what they hold
+    code:                       # optional before/after comparison
+      before: { label: Java 1.4, source: "..." }
+      after: { label: Java 5, source: "..." }
+    lesson: history/java-5-varargs   # optional link to an Execution Lesson that shows the change running
+```
+
+The stop holds the facts (what changed). `narration.md` holds the story (why it mattered) and the Predict Prompts. Timeline Lessons have one Variant and no JVM Detail Level, so their narration headings take neither suffix.
+
 ## Variants
 
 A Variant is the Lesson's root `.java` files with same-named files from `variants/<id>/` replacing them. Put only the changed files in the Variant's directory. The `default` Variant is the root files as they are.

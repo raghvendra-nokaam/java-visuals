@@ -1,0 +1,217 @@
+.timeline {
+  display: grid;
+  gap: 1.75rem;
+}
+
+/* The rail: stops placed by real date, so the jump from multi-year gaps to a release every six months shows. */
+.rail {
+  position: relative;
+  list-style: none;
+  margin: 0.75rem 0.75rem 0;
+  padding: 0;
+  height: 3rem;
+  border-top: 2px solid var(--rule);
+}
+
+.rail-item {
+  position: absolute;
+  top: 0;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.rail-stop {
+  width: 0.75rem;
+  height: 0.75rem;
+  margin-top: calc(-0.375rem - 1px);
+  padding: 0;
+  border: 2px solid var(--ink);
+  border-radius: 50%;
+  background: var(--paper);
+  cursor: pointer;
+}
+
+.rail-stop[data-landmark] {
+  width: 1.25rem;
+  height: 1.25rem;
+  margin-top: calc(-0.625rem - 1px);
+}
+
+.rail-stop[data-kind="event"] {
+  border-radius: 2px;
+  transform: rotate(45deg);
+  border-color: var(--heap);
+}
+
+.rail-stop[data-state="past"] {
+  background: var(--ink);
+}
+
+.rail-stop[data-kind="event"][data-state="past"] {
+  background: var(--heap);
+}
+
+.rail-stop[data-state="current"] {
+  background: var(--stack);
+  border-color: var(--stack);
+  box-shadow: 0 0 0 4px var(--stack-tint);
+}
+
+.rail-year {
+  margin-top: 0.375rem;
+  font-size: 0.8125rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-soft);
+}
+
+.timeline-body {
+  display: grid;
+  grid-template-columns: 7fr 5fr;
+  gap: 2rem;
+  align-items: start;
+}
+
+.stop {
+  background: var(--surface);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-card);
+  padding: 1.25rem 1.5rem 1.5rem;
+}
+
+.stop[data-landmark] {
+  border-top: 6px solid var(--stack);
+}
+
+.stop[data-kind="event"] {
+  border-top: 6px solid var(--heap);
+}
+
+.stop-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 0.75rem;
+  margin: 0;
+  color: var(--ink-soft);
+}
+
+.stop-badge {
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: var(--stack);
+  border: 1px solid var(--stack);
+  border-radius: 999px;
+  padding: 0.05rem 0.6rem;
+}
+
+.stop-badge[data-kind="event"] {
+  color: var(--heap);
+  border-color: var(--heap);
+}
+
+/* The version number is the stop's identity, so it gets the display treatment. */
+.stop-version {
+  margin: 0.25rem 0 0;
+  font-size: 2rem;
+  line-height: 1.1;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.stop[data-landmark] .stop-version {
+  font-size: 3.25rem;
+}
+
+.stop-headline {
+  margin: 0.5rem 0 0;
+  font-size: 1.25rem;
+  font-weight: 700;
+  max-width: 50ch;
+}
+
+.stop-features {
+  margin: 1rem 0 0;
+  padding-left: 1.25rem;
+  display: grid;
+  gap: 0.375rem;
+  max-width: 62ch;
+}
+
+.stop code,
+.stop-features code {
+  font-family: var(--font-mono);
+  font-size: 0.9em;
+}
+
+.stop-code {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin-top: 1.25rem;
+}
+
+.stop-code figure {
+  margin: 0;
+  min-width: 0;
+}
+
+.stop-code figcaption {
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: var(--ink-soft);
+  margin-bottom: 0.375rem;
+}
+
+.stop-code pre {
+  margin: 0;
+  padding: 0.75rem 0.875rem;
+  overflow-x: auto;
+  background: var(--paper);
+  border: 1px solid var(--rule);
+  border-left: 4px solid var(--rule);
+  border-radius: var(--radius-small);
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+  line-height: 1.6;
+}
+
+.stop-code figure[data-side="after"] pre {
+  border-left-color: var(--stack);
+}
+
+.stop-lesson {
+  margin: 1.25rem 0 0;
+  font-weight: 700;
+}
+
+.timeline-side .narration {
+  border-top: none;
+  padding-top: 0;
+}
+
+@media (max-width: 64rem) {
+  .timeline-body {
+    grid-template-columns: 1fr;
+  }
+
+  .timeline-side .narration {
+    border-top: 1px solid var(--rule);
+    padding-top: 1rem;
+  }
+}
+
+@media (max-width: 48rem) {
+  .stop-code {
+    grid-template-columns: 1fr;
+  }
+
+  .stop[data-landmark] .stop-version {
+    font-size: 2.5rem;
+  }
+
+  .rail-year {
+    font-size: 0.75rem;
+  }
+}

@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { MotionConfig } from "motion/react";
 import { initialState, reduce, SPEEDS, type PlayerAction, type PlayerState } from "./core";
+import { Inline } from "./Inline";
 import type { Renderer } from "./renderer";
 import {
   narrationAt,
@@ -164,6 +165,7 @@ export default function Player<T extends StepSource>({
           data={data}
           index={state.index}
           level={level}
+          onSeek={(index) => dispatch({ type: "seek", index })}
           explanation={
             <section className="narration" aria-label="Explanation">
               {prompt ? (
@@ -321,14 +323,6 @@ function Prose({ text, className }: { text: string; className: string }) {
           <Inline text={paragraph} />
         </p>
       ))}
-    </>
-  );
-}
-
-function Inline({ text }: { text: string }) {
-  return (
-    <>
-      {text.split(/`([^`]+)`/).map((part, i) => (i % 2 ? <code key={i}>{part}</code> : part))}
     </>
   );
 }

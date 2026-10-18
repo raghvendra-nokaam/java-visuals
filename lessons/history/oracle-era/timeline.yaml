@@ -1,0 +1,92 @@
+stops:
+  - id: oracle
+    kind: event
+    version: Oracle acquires Sun
+    released: "2010-01-27"
+    headline: Java gets a new steward
+    features:
+      - Oracle completes its purchase of Sun Microsystems, and with it Java
+      - Java 7 has been in development for over three years with no release date
+
+  - id: java-7
+    version: Java SE 7
+    released: "2011-07-28"
+    headline: Small changes that remove everyday boilerplate
+    features:
+      - try-with-resources closes files and connections automatically
+      - The diamond operator, `new ArrayList<>()`
+      - Strings in `switch`, and catching several exceptions in one `catch`
+      - Binary literals and underscores in numbers, like `1_000_000`
+      - NIO.2's `Path` and `Files` for working with the file system
+      - The fork/join framework, and invokedynamic for other languages on the JVM
+    code:
+      before:
+        label: Java 6
+        source: |
+          BufferedReader in =
+              new BufferedReader(new FileReader(path));
+          try {
+              return in.readLine();
+          } finally {
+              in.close();
+          }
+      after:
+        label: Java 7
+        source: |
+          try (BufferedReader in =
+                  new BufferedReader(new FileReader(path))) {
+              return in.readLine();
+          }
+
+  - id: java-8
+    version: Java SE 8
+    released: "2014-03-18"
+    landmark: true
+    lts: true
+    headline: Lambdas and streams
+    features:
+      - Lambda expressions and method references
+      - The Streams API for processing collections step by step
+      - "`java.time`, a modern date and time library"
+      - Default methods, so interfaces can grow without breaking implementations
+      - "`Optional` for values that might be missing"
+      - Metaspace replaces PermGen for storing class data
+    code:
+      before:
+        label: Java 7
+        source: |
+          List<String> shortNames = new ArrayList<>();
+          for (String name : names) {
+              if (name.length() <= 4) {
+                  shortNames.add(name.toUpperCase());
+              }
+          }
+      after:
+        label: Java 8
+        source: |
+          List<String> shortNames = names.stream()
+              .filter(name -> name.length() <= 4)
+              .map(String::toUpperCase)
+              .collect(Collectors.toList());
+
+  - id: java-9
+    version: Java SE 9
+    released: "2017-09-21"
+    landmark: true
+    headline: The JDK splits into modules
+    features:
+      - The Java Platform Module System, from Project Jigsaw
+      - JShell, for trying Java one line at a time
+      - G1 becomes the default garbage collector
+      - Factory methods such as `List.of` and `Map.of`
+      - Private methods in interfaces
+    code:
+      before:
+        label: Java 8
+        source: |
+          List<String> days = Collections.unmodifiableList(
+              Arrays.asList("Mon", "Tue", "Wed"));
+      after:
+        label: Java 9
+        source: |
+          List<String> days = List.of("Mon", "Tue", "Wed");

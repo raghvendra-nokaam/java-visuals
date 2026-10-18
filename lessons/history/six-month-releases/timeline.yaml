@@ -1,0 +1,276 @@
+stops:
+  - id: cadence
+    kind: event
+    version: A new release every six months
+    released: "2017-09-06"
+    headline: Ship what's ready, every March and September
+    features:
+      - A feature release every six months, whatever is finished goes in
+      - Preview features let developers try language changes before they become permanent
+      - Some releases get long-term support (LTS), every three years at first and every two years from Java 17 on
+
+  - id: java-10
+    version: JDK 10
+    released: "2018-03-20"
+    headline: "`var` for local variables"
+    features:
+      - Local variable type inference with `var`
+      - The first release on the six-month schedule
+    code:
+      before:
+        label: Java 9
+        source: |
+          Map<String, List<Integer>> scores = new HashMap<>();
+      after:
+        label: Java 10
+        source: |
+          var scores = new HashMap<String, List<Integer>>();
+
+  - id: java-11
+    version: JDK 11
+    released: "2018-09-25"
+    landmark: true
+    lts: true
+    headline: The first long-term support release on the new schedule
+    features:
+      - Run a single source file directly with `java Hello.java`
+      - A standard HTTP Client
+      - New `String` methods such as `isBlank`, `lines`, `strip` and `repeat`
+      - Java EE and CORBA modules removed from the JDK
+      - ZGC, a low-pause garbage collector (experimental)
+
+  - id: java-12
+    version: JDK 12
+    released: "2019-03-19"
+    headline: Switch expressions, as a preview
+    features:
+      - Switch expressions (preview)
+      - The Shenandoah garbage collector (experimental)
+
+  - id: java-13
+    version: JDK 13
+    released: "2019-09-17"
+    headline: Text blocks, as a preview
+    features:
+      - Text blocks for multi-line strings (preview)
+      - Switch expressions (second preview)
+
+  - id: java-14
+    version: JDK 14
+    released: "2020-03-17"
+    headline: Switch expressions are final
+    features:
+      - Switch expressions become a standard feature
+      - Helpful NullPointerException messages that name what was null
+      - Records and pattern matching for `instanceof` (previews)
+    code:
+      before:
+        label: Java 13
+        source: |
+          String label;
+          switch (day) {
+              case SATURDAY:
+              case SUNDAY:
+                  label = "weekend";
+                  break;
+              default:
+                  label = "weekday";
+          }
+      after:
+        label: Java 14
+        source: |
+          String label = switch (day) {
+              case SATURDAY, SUNDAY -> "weekend";
+              default -> "weekday";
+          };
+
+  - id: java-15
+    version: JDK 15
+    released: "2020-09-15"
+    headline: Text blocks are final
+    features:
+      - Text blocks become a standard feature
+      - Sealed classes (preview)
+      - ZGC and Shenandoah are ready for production
+      - The Nashorn JavaScript engine is removed
+
+  - id: java-16
+    version: JDK 16
+    released: "2021-03-16"
+    headline: Records are final
+    features:
+      - Records become a standard feature
+      - Pattern matching for `instanceof` becomes a standard feature
+      - JDK internals are strongly encapsulated by default
+      - OpenJDK development moves to Git and GitHub
+    code:
+      before:
+        label: Java 15
+        source: |
+          final class Point {
+              private final int x, y;
+              Point(int x, int y) { this.x = x; this.y = y; }
+              int x() { return x; }
+              int y() { return y; }
+              // ...plus equals, hashCode and toString
+          }
+      after:
+        label: Java 16
+        source: |
+          record Point(int x, int y) {}
+
+  - id: java-17
+    version: JDK 17
+    released: "2021-09-14"
+    landmark: true
+    lts: true
+    headline: Sealed classes, and the next LTS
+    features:
+      - Sealed classes become a standard feature
+      - JDK internals strongly encapsulated, with no switch to turn that off
+      - Pattern matching for `switch` (preview)
+      - Native support for Apple Silicon Macs
+      - The Applet API and the Security Manager are deprecated for removal
+    code:
+      before:
+        label: Java 16
+        source: |
+          interface Shape {}
+          // Any class, anywhere, can implement Shape.
+      after:
+        label: Java 17
+        source: |
+          sealed interface Shape permits Circle, Square {}
+          record Circle(double radius) implements Shape {}
+          record Square(double side) implements Shape {}
+
+  - id: java-18
+    version: JDK 18
+    released: "2022-03-22"
+    headline: UTF-8 everywhere
+    features:
+      - UTF-8 is the default character set on every platform
+      - "`jwebserver`, a simple web server for testing"
+      - Code snippets in Javadoc
+      - Finalization is deprecated for removal
+
+  - id: java-19
+    version: JDK 19
+    released: "2022-09-20"
+    headline: Virtual threads, as a preview
+    features:
+      - Virtual threads (preview)
+      - Record patterns (preview)
+      - Structured concurrency (incubator)
+      - A port to Linux on RISC-V
+
+  - id: java-20
+    version: JDK 20
+    released: "2023-03-21"
+    headline: A release of previews
+    features:
+      - Scoped values (incubator)
+      - Virtual threads, record patterns and pattern matching for `switch` get another preview
+
+  - id: java-21
+    version: JDK 21
+    released: "2023-09-19"
+    landmark: true
+    lts: true
+    headline: Virtual threads are final
+    features:
+      - Virtual threads become a standard feature
+      - Record patterns and pattern matching for `switch` become standard features
+      - Sequenced collections, with `getFirst`, `getLast` and `reversed`
+      - Generational ZGC
+    code:
+      before:
+        label: Java 20
+        source: |
+          // A fixed pool: at most 200 tasks
+          // can wait on the network at once.
+          var pool = Executors.newFixedThreadPool(200);
+      after:
+        label: Java 21
+        source: |
+          // One cheap virtual thread per task,
+          // even for a million tasks.
+          var pool = Executors.newVirtualThreadPerTaskExecutor();
+
+  - id: java-22
+    version: JDK 22
+    released: "2024-03-19"
+    headline: Unnamed variables and native code without JNI
+    features:
+      - Unnamed variables and patterns, written `_`
+      - The Foreign Function & Memory API becomes a standard feature
+      - Launch programs made of several source files with `java`
+
+  - id: java-23
+    version: JDK 23
+    released: "2024-09-17"
+    headline: Markdown in documentation comments
+    features:
+      - Markdown documentation comments
+      - Generational mode becomes ZGC's default
+      - Primitive types in patterns, and module import declarations (previews)
+
+  - id: java-24
+    version: JDK 24
+    released: "2025-03-18"
+    headline: Stream gatherers and faster startup
+    features:
+      - Stream gatherers for custom stream operations
+      - The Class-File API
+      - Virtual threads no longer pin their carrier thread inside `synchronized`
+      - Ahead-of-time class loading and linking for faster startup
+      - The Security Manager is permanently disabled
+      - Quantum-resistant ML-KEM and ML-DSA cryptography
+
+  - id: java-25
+    version: JDK 25
+    released: "2025-09-16"
+    landmark: true
+    lts: true
+    headline: Hello, world gets shorter
+    features:
+      - Compact source files and instance main methods
+      - Flexible constructor bodies, with statements before `super(...)`
+      - Module import declarations and scoped values become standard features
+      - Compact object headers, so every object takes less memory
+      - The 32-bit x86 port is removed
+    code:
+      before:
+        label: Java 24
+        source: |
+          public class Hello {
+              public static void main(String[] args) {
+                  System.out.println("Hello, world");
+              }
+          }
+      after:
+        label: Java 25
+        source: |
+          void main() {
+              IO.println("Hello, world");
+          }
+
+  - id: java-26
+    version: JDK 26
+    released: "2026-03-17"
+    headline: HTTP/3, and the applet era ends
+    features:
+      - HTTP/3 support in the HTTP Client
+      - The Applet API is removed
+      - Ahead-of-time object caching works with any garbage collector
+      - Warnings when code changes `final` fields through reflection
+
+  - id: java-27
+    version: JDK 27
+    released: "2026-09-15"
+    headline: G1 everywhere, smaller objects by default
+    features:
+      - G1 becomes the default garbage collector in every environment
+      - Compact object headers are on by default
+      - Post-quantum hybrid key exchange for TLS 1.3
+      - Lazy constants, primitive types in patterns and structured concurrency continue as previews

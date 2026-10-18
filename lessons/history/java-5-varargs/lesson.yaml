@@ -1,0 +1,12 @@
+title: "Java 5: new syntax, same JVM"
+kind: execution
+order: 2
+summary: Varargs and the enhanced for loop look new, but the JVM runs the same thing. Compare the Java 1.4 and Java 5 versions of one method.
+prerequisites:
+  - memory/method-calls
+detail: simple
+variants:
+  - id: default
+    label: Java 1.4 style
+  - id: java-5
+    label: Java 5 style

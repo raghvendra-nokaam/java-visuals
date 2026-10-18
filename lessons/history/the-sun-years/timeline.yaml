@@ -1,0 +1,129 @@
+stops:
+  - id: java-1-0
+    version: JDK 1.0
+    released: "1996-01-23"
+    landmark: true
+    headline: Write once, run anywhere
+    features:
+      - Programs compile to bytecode, which a Java Virtual Machine runs on any operating system
+      - Memory is managed for you by a garbage collector
+      - Applets run Java programs inside web browsers
+      - AWT for building graphical interfaces
+
+  - id: java-1-1
+    version: JDK 1.1
+    released: "1997-02-19"
+    headline: Ready for real applications
+    features:
+      - Inner classes
+      - JDBC for talking to databases
+      - RMI for calling methods on objects in another JVM
+      - Reflection, so code can inspect classes while it runs
+      - JavaBeans, a component model for reusable parts
+
+  - id: java-1-2
+    version: J2SE 1.2
+    released: "1998-12-08"
+    landmark: true
+    headline: Java 2 and the Collections Framework
+    features:
+      - The Collections Framework, with `List`, `Set` and `Map` interfaces and implementations such as `ArrayList` and `HashMap`
+      - Swing, a richer toolkit for desktop interfaces
+      - A just-in-time compiler included in the standard JVM
+      - Rebranded as Java 2, soon split into Standard, Enterprise and Micro editions
+    code:
+      before:
+        label: Java 1.1
+        source: |
+          Vector names = new Vector();
+          names.addElement("Ada");
+          String first = (String) names.elementAt(0);
+      after:
+        label: Java 1.2
+        source: |
+          List names = new ArrayList();
+          names.add("Ada");
+          String first = (String) names.get(0);
+
+  - id: java-1-3
+    version: J2SE 1.3
+    released: "2000-05-08"
+    headline: HotSpot becomes the default JVM
+    features:
+      - The HotSpot JVM watches which code runs most and compiles it to machine code while the program runs
+      - JNDI for looking up services and resources by name
+      - The Java Sound API
+
+  - id: java-1-4
+    version: J2SE 1.4
+    released: "2002-02-06"
+    headline: The first release shaped by the Java Community Process
+    features:
+      - The `assert` keyword
+      - Regular expressions in `java.util.regex`
+      - NIO, with buffers, channels and non-blocking I/O
+      - A built-in logging API
+      - Chained exceptions, so an exception can carry the one that caused it
+      - XML parsing in the standard library
+    code:
+      before:
+        label: Java 1.3
+        source: |
+          if (age < 0) {
+              throw new IllegalStateException("negative age");
+          }
+      after:
+        label: Java 1.4
+        source: |
+          assert age >= 0 : "negative age";
+
+  - id: java-5
+    version: J2SE 5.0
+    released: "2004-09-30"
+    landmark: true
+    headline: The biggest change to the language since 1.0
+    features:
+      - Generics, so collections know what they hold
+      - Annotations such as `@Override`
+      - Enums, autoboxing, varargs and the enhanced `for` loop
+      - Static imports
+      - "`java.util.concurrent`: thread pools, locks and concurrent collections"
+    code:
+      before:
+        label: Java 1.4
+        source: |
+          List names = new ArrayList();
+          names.add("Ada");
+          for (Iterator it = names.iterator(); it.hasNext();) {
+              String name = (String) it.next();
+              System.out.println(name);
+          }
+      after:
+        label: Java 5
+        source: |
+          List<String> names = new ArrayList<String>();
+          names.add("Ada");
+          for (String name : names) {
+              System.out.println(name);
+          }
+    lesson: history/java-5-varargs
+
+  - id: openjdk
+    kind: event
+    version: Java goes open source
+    released: "2006-11-13"
+    headline: Sun releases the JDK as free software
+    features:
+      - Sun publishes the HotSpot JVM and the `javac` compiler under the GPL, and the rest of the JDK follows in 2007 as OpenJDK
+      - From Java 7 on, OpenJDK is the reference implementation of Java SE
+
+  - id: java-6
+    version: Java SE 6
+    released: "2006-12-11"
+    headline: Faster, with a new name
+    features:
+      - J2SE becomes Java SE
+      - A Scripting API for running other languages on the JVM
+      - A Compiler API, so Java programs can compile Java code
+      - JDBC 4.0
+      - Large JVM and garbage collector performance gains

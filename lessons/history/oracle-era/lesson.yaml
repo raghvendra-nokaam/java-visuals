@@ -1,0 +1,7 @@
+title: Oracle, lambdas and modules
+kind: timeline
+order: 3
+summary: Oracle buys Sun, Java 7 ends a five-year wait, Java 8 brings lambdas, and Java 9 splits the JDK into modules.
+prerequisites:
+  - history/the-sun-years
+detail: simple

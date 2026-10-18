@@ -18,7 +18,12 @@ One Trace per (Lesson, Variant, Schedule). `scheduleId` is absent for single-thr
 
 ## Full state in every Step
 
-Each Step carries the complete state, not a diff, so scrubbing to any Step is a direct lookup. `events` additionally list what changed since the previous Step, in order, so renderers can animate (draw the arrow *after* the allocation) without diffing. Events are a hint for animation; state is the truth.
+Each Step carries the complete state, not a diff, so scrubbing to any Step is a direct lookup. `events` additionally list what changed since the previous Step, so renderers can animate (draw the arrow *after* the allocation) without diffing. Events are a hint for animation; state is the truth.
+
+Calls, returns and output are observed directly by the debugger. Allocations, assignments and eligibility are derived by diffing consecutive Steps, so:
+
+- Events use a **canonical order**: returns, allocations, calls, assignments, eligibility, output. This isn't necessarily chronological. For example, a constructor's field writes are reported on the Step after it returns.
+- A write that stores the value a slot already held (`y = 0` over a default `0`) isn't visible and isn't reported.
 
 If Trace files get too large, version 2 may switch to keyframes plus deltas. Lesson Programs are kept tiny, so we're not doing that yet.
 
@@ -30,7 +35,7 @@ If Trace files get too large, version 2 may switch to keyframes plus deltas. Les
 
 ## What's on the Stack
 
-- Only Frames of **Lesson Program classes** are included; JDK Frames are omitted. In the fixture, `println(p)` invokes the record's `toString()`, so the Stack shows `main → toString` even though `PrintStream.println` and `String.valueOf` are really in between.
+- Only Frames of **Lesson Program classes** are included; JDK Frames are omitted. Static initializers that run before `main` aren't recorded. In the fixture, `println(p)` invokes the record's `toString()`, so the Stack shows `main → toString` even though `PrintStream.println` and `String.valueOf` are really in between.
 - A record's or enum's generated methods (`<init>`, `toString`, accessors) *are* Lesson Program code and do appear, at the line of the record header.
 - Frames are ordered outermost first, current Frame last. A non-top Frame's `line` is its call site.
 
@@ -40,6 +45,8 @@ If Trace files get too large, version 2 may switch to keyframes plus deltas. Les
 - ✔ Every `ref` value resolves to an Object in the **same** Step.
 - **`internal: true`** marks a JDK Internal: not created by Lesson Program code (e.g. `args`, an `ArrayList`'s backing array). Hidden at the Simple Detail Level unless the Lesson opts in.
 - **`inline: true`** (Strings, boxed primitives): at Simple level, draw References to it as its `display` text instead of an arrow. At JVM level, draw it as a normal Object.
+- **In flight:** an Object held only on the JVM operand stack (a `new` whose result hasn't been stored yet, or a value just returned from a method) is still `live`. The rule: an Object that was reachable at any point while the active Frame has been executing its current line stays live until that line finishes.
+- A JDK Internal that leaves the Lesson Program's reach is **removed** from the Heap rather than marked `eligible`. The JDK may still hold it (e.g. `ArrayList`'s shared empty array), so we can't claim it's garbage.
 - **`state`**: `live` → `eligible` (no longer reachable; drawn greyed, still present) → `collected` (only in Lessons that script a GC). ✔ State never goes backwards.
 - `allocatedAt` is the Lesson Program line whose `new` (or literal) created the Object, and it drives linked highlighting.
 - `monitor` is present only while the lock is owned or contended.

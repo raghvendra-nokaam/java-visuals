@@ -3,6 +3,7 @@
  *   fixtures/*.json              must pass
  *   fixtures/invalid/*.json      must fail (proves the checks catch real mistakes)
  *   ../lessons/**\/traces/*.json must pass
+ *   any extra paths given as arguments must pass
  */
 import { readFileSync, readdirSync, existsSync } from "node:fs";
 import { join, relative } from "node:path";
@@ -32,7 +33,8 @@ function jsonFiles(dir: string): string[] {
 const fixturesDir = join(root, "fixtures");
 const invalidDir = join(fixturesDir, "invalid");
 const lessonTraces = jsonFiles(join(root, "..", "lessons")).filter((f) => f.split("/").includes("traces"));
-const mustPass = [...jsonFiles(fixturesDir).filter((f) => !f.startsWith(invalidDir)), ...lessonTraces];
+const extra = process.argv.slice(2).map((p) => join(process.cwd(), p));
+const mustPass = [...jsonFiles(fixturesDir).filter((f) => !f.startsWith(invalidDir)), ...lessonTraces, ...extra];
 const mustFail = jsonFiles(invalidDir);
 
 let failed = false;

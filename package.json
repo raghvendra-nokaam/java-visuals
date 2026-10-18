@@ -9,7 +9,8 @@
     "dev": "npm run dev -w site",
     "build": "npm run build -w trace-schema && npm run build -w site",
     "validate": "npm run validate -w trace-schema",
-    "check": "npm run build -w trace-schema && npm run validate && npm run check -w site"
+    "check": "npm run build -w trace-schema && npm run validate && npm run check -w site",
+    "record": "recorder/gradlew -p recorder run -q --args=\"record lessons/memory/method-calls\""
   },
   "engines": {
     "node": ">=22.22.0"

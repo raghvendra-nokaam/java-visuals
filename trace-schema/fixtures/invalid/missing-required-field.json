@@ -840,6 +840,11 @@
       "console": "",
       "events": [
         {
+          "type": "return",
+          "thread": "main",
+          "frameId": "f3"
+        },
+        {
           "type": "assign",
           "target": {
             "objectId": "o2",
@@ -850,23 +855,6 @@
             "type": "int",
             "display": "5"
           }
-        },
-        {
-          "type": "assign",
-          "target": {
-            "objectId": "o2",
-            "field": "y"
-          },
-          "value": {
-            "kind": "primitive",
-            "type": "int",
-            "display": "0"
-          }
-        },
-        {
-          "type": "return",
-          "thread": "main",
-          "frameId": "f3"
         }
       ]
     },

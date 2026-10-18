@@ -19,7 +19,9 @@ Requires Node 22.22+ (`.nvmrc` pins 24) and a JDK 17+ to run Gradle (the build p
 
 ```bash
 npm install
-npm run validate        # validate fixture Traces against the schema
+npm run record          # record lesson Traces (needed before dev/build)
+npm run validate        # validate Traces against the schema
+npm test                # site unit tests + recorder tests
 npm run dev             # start the site
 ./recorder/gradlew -p recorder build
 ```

@@ -1,0 +1,14 @@
+import type { Trace } from "@java-visuals/trace-schema";
+import Player from "../../player/Player";
+import type { DetailLevel, LessonScript } from "../../player/script";
+import { executionRenderer } from "../../renderers/execution";
+
+/** Client island for an Execution Lesson. Takes only serializable props; wires the renderer in on the client. */
+export default function ExecutionLesson(props: {
+  variants: Record<string, Trace>;
+  variantLabels?: Record<string, string>;
+  script: LessonScript;
+  defaultLevel: DetailLevel;
+}) {
+  return <Player {...props} renderer={executionRenderer} offersJvmDetail />;
+}

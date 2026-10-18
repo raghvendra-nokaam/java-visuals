@@ -1,0 +1,283 @@
+.player {
+  max-width: 90rem;
+  margin: 0 auto;
+  padding: 1.25rem 1.5rem 0;
+  display: grid;
+  gap: 1.25rem;
+}
+
+.player-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.75rem 1.5rem;
+}
+
+.lesson-title {
+  margin: 0;
+  font-size: 1.75rem;
+  line-height: 1.2;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+}
+
+.player-options {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 1rem;
+}
+
+.option {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.9375rem;
+  color: var(--ink-soft);
+}
+
+select {
+  font: inherit;
+  color: var(--ink);
+  background: var(--surface);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-small);
+  padding: 0.25rem 0.5rem;
+}
+
+.segmented {
+  display: inline-flex;
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-small);
+  overflow: hidden;
+}
+
+.segmented button {
+  font: inherit;
+  font-size: 0.9375rem;
+  padding: 0.3rem 0.875rem;
+  color: var(--ink);
+  background: var(--surface);
+  border: none;
+  cursor: pointer;
+}
+
+.segmented button + button {
+  border-left: 1px solid var(--rule);
+}
+
+.segmented button[aria-pressed="true"] {
+  background: var(--ink);
+  color: var(--paper);
+}
+
+.small-screen-note {
+  display: none;
+  margin: 0;
+  font-size: 0.9375rem;
+  color: var(--ink-soft);
+}
+
+/* Narration: the one place the lesson talks, so it gets reading-size type and a measure under 70ch. */
+.narration {
+  min-height: 5.5rem;
+  border-top: 1px solid var(--rule);
+  padding-top: 1rem;
+}
+
+.narration-text,
+.prompt-question {
+  margin: 0;
+  max-width: 68ch;
+  font-size: 1.1875rem;
+  line-height: 1.55;
+}
+
+.narration-hint {
+  margin: 0.5rem 0 0;
+  color: var(--stack);
+  font-weight: 700;
+}
+
+.prompt-question {
+  font-weight: 700;
+}
+
+.prompt-choices {
+  list-style: none;
+  margin: 0.75rem 0 0;
+  padding: 0;
+  display: grid;
+  gap: 0.5rem;
+  max-width: 44rem;
+}
+
+.prompt-choice {
+  width: 100%;
+  text-align: left;
+  font: inherit;
+  color: var(--ink);
+  background: var(--surface);
+  border: 2px solid var(--rule);
+  border-radius: var(--radius-card);
+  padding: 0.625rem 0.875rem;
+  cursor: pointer;
+}
+
+.prompt-choice:hover:not(:disabled) {
+  border-color: var(--stack);
+}
+
+.prompt-choice:disabled {
+  cursor: default;
+  color: var(--ink-soft);
+}
+
+.prompt-choice[data-verdict="right"] {
+  border-color: var(--ok);
+  color: var(--ink);
+}
+
+.prompt-choice[data-verdict="wrong"] {
+  border-color: var(--wrong);
+  border-style: dashed;
+}
+
+.prompt-result {
+  margin-top: 0.875rem;
+  max-width: 68ch;
+}
+
+.prompt-result p {
+  margin: 0 0 0.75rem;
+}
+
+.button-primary {
+  font: inherit;
+  font-weight: 700;
+  color: var(--paper);
+  background: var(--stack);
+  border: none;
+  border-radius: var(--radius-small);
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+}
+
+/* Playback bar stays reachable while the diagram scrolls. */
+.controls {
+  position: sticky;
+  bottom: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem 1.25rem;
+  margin: 0 -1.5rem;
+  padding: 0.75rem 1.5rem;
+  background: var(--paper);
+  border-top: 1px solid var(--rule);
+}
+
+.control-buttons {
+  display: flex;
+  gap: 0.375rem;
+}
+
+.icon-button {
+  display: inline-grid;
+  place-items: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  color: var(--ink);
+  background: var(--surface);
+  border: 1px solid var(--rule);
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+.icon-button svg {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.25;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.icon-button[data-primary] {
+  width: 3rem;
+  height: 3rem;
+  color: var(--paper);
+  background: var(--ink);
+  border-color: var(--ink);
+}
+
+.icon-button[data-primary] svg {
+  fill: currentColor;
+}
+
+.icon-button:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.scrubber {
+  position: relative;
+  flex: 1 1 14rem;
+  display: flex;
+  align-items: center;
+}
+
+.scrubber input {
+  width: 100%;
+  accent-color: var(--stack);
+}
+
+/* Ticks mark where narration changes (thin) and where Predict Prompts wait (tall). */
+.scrubber-ticks {
+  position: absolute;
+  inset: auto 0.5rem -0.375rem;
+  height: 0.5rem;
+  pointer-events: none;
+}
+
+.tick {
+  position: absolute;
+  bottom: 0;
+  width: 2px;
+  height: 0.375rem;
+  transform: translateX(-1px);
+  background: var(--ink-soft);
+}
+
+.tick[data-kind="prompt"] {
+  width: 0.5rem;
+  height: 0.5rem;
+  transform: translateX(-0.25rem);
+  border-radius: 50%;
+  background: var(--stack);
+}
+
+.step-count {
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-soft);
+  min-width: 7.5rem;
+}
+
+@media (max-width: 40rem) {
+  .player {
+    padding: 1rem 1rem 0;
+  }
+
+  .controls {
+    margin: 0 -1rem;
+    padding: 0.75rem 1rem;
+  }
+
+  .small-screen-note {
+    display: block;
+  }
+
+  .lesson-title {
+    font-size: 1.375rem;
+  }
+}

@@ -1,0 +1,77 @@
+{
+  "title": "Method calls and Frames",
+  "narration": [
+    {
+      "at": "start",
+      "text": "Every Java program starts by calling main. The JVM pushes a Frame for it onto the main thread's Stack: a private workspace that holds main's local variables."
+    },
+    {
+      "at": "start",
+      "detail": "jvm",
+      "text": "Every Java program starts by calling main. The JVM pushes a Frame for it onto the main thread's Stack. args points to a String[] the JVM created before your code ran, a JDK Internal that the Simple view hides."
+    },
+    {
+      "at": "call-add",
+      "text": "x and y live inside main's Frame. An int stores its value directly in the variable, with no object involved."
+    },
+    {
+      "at": "add-compute",
+      "text": "Calling add pushed a new Frame on top of main's. Its parameters a and b are copies of x and y, because Java always passes arguments by value."
+    },
+    {
+      "at": "new-point",
+      "text": "add returned 5 and its Frame was popped. Its locals a, b and result are gone for good. The returned value landed in sum."
+    },
+    {
+      "at": "point-constructor",
+      "text": "new created a Point on the Heap and then ran its constructor in a new Frame. this refers to the object being built, and its fields start at 0 until the constructor sets them."
+    },
+    {
+      "at": "print",
+      "text": "p doesn't contain the Point. It holds a Reference, drawn as the arrow, to the object on the Heap."
+    },
+    {
+      "at": "object-dropped",
+      "text": "println called Point's toString to get its text. The JDK frames in between are hidden, so you only see the code that belongs to this program."
+    },
+    {
+      "at": "end",
+      "text": "Nothing references the Point any more, so it is eligible for garbage collection. It's greyed out but still in memory until the garbage collector decides to run."
+    }
+  ],
+  "prompts": [
+    {
+      "at": "call-add",
+      "question": "What happens on the Stack when add(x, y) is called?",
+      "choices": [
+        "add's code runs inside main's Frame",
+        "A new Frame for add is pushed on top of main's",
+        "x and y move to the Heap so add can reach them"
+      ],
+      "answer": 1,
+      "explanation": "Every method call gets its own Frame. It's pushed when the call starts and popped when the method returns."
+    },
+    {
+      "at": "new-point",
+      "question": "Where will the new Point object live?",
+      "choices": [
+        "Inside main's Frame, next to p",
+        "In the variable p itself",
+        "On the Heap, with p holding a Reference to it"
+      ],
+      "answer": 2,
+      "explanation": "Objects always live on the Heap. Variables of object type hold a Reference to them, never the object itself."
+    },
+    {
+      "at": "object-dropped",
+      "question": "After p = null runs, what happens to the Point object?",
+      "choices": [
+        "It is deleted immediately",
+        "It stays on the Heap, unreachable, until the garbage collector removes it",
+        "It moves into main's Frame"
+      ],
+      "answer": 1,
+      "explanation": "Java never frees objects the moment you stop using them. Unreachable objects wait on the Heap until the garbage collector runs."
+    }
+  ]
+}

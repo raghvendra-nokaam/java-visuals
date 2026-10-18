@@ -1,21 +1,35 @@
 ---
-import type { Trace } from "@java-visuals/trace-schema";
-import fixture from "@java-visuals/trace-schema/fixtures/method-calls.json";
-import TraceSummary from "../components/TraceSummary.tsx";
-
-const trace = fixture as unknown as Trace;
+import Base from "../layouts/Base.astro";
 ---
 
-<html lang="en">
-	<head>
-		<meta charset="utf-8" />
-		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-		<meta name="viewport" content="width=device-width" />
-		<title>Java Visuals</title>
-	</head>
-	<body>
-		<h1>Java Visuals</h1>
-		<p>Learn Java by watching it run.</p>
-		<TraceSummary trace={trace} />
-	</body>
-</html>
+<Base title="Java Visuals">
+  <main class="home">
+    <h1>Java Visuals</h1>
+    <p>Learn Java by watching it run: every Frame pushed, every object allocated, every Reference drawn.</p>
+    <h2>Memory</h2>
+    <ul>
+      <li><a href="/lessons/memory/method-calls">Method calls and Frames</a></li>
+    </ul>
+  </main>
+</Base>
+
+<style>
+  .home {
+    max-width: 44rem;
+    margin: 0 auto;
+    padding: 3rem 1rem;
+  }
+  h1 {
+    font-size: 2.5rem;
+    line-height: 1.1;
+    margin: 0 0 0.75rem;
+  }
+  p {
+    font-size: 1.1875rem;
+    max-width: 60ch;
+  }
+  h2 {
+    font-size: 1.125rem;
+    margin-top: 2.5rem;
+  }
+</style>

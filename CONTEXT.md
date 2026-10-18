@@ -86,6 +86,10 @@ _Avoid_: Micro-step, instruction step
 An author-defined interleaving of threads that the recorder enforces when producing a Trace, so a concurrency outcome (such as a lost update) is guaranteed to appear.
 _Avoid_: Interleaving (as a noun for the artifact), scenario, seed
 
+**Turn**:
+One entry in a Schedule: run a named thread until it reaches a Marker (plus some Steps), blocks, waits, or finishes.
+_Avoid_: Slice, phase, segment
+
 **Narration**:
 Author-written explanation attached to specific Steps, shown as playback reaches them; the only explanatory text in a Lesson.
 _Avoid_: Caption, commentary, description

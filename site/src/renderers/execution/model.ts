@@ -56,13 +56,17 @@ export function describe(step: Step, level: DetailLevel): string {
     return `a ${shortType(target.type)}`;
   };
 
-  const parts = [`Line ${step.location.line}.`];
+  const multi = step.threads.length > 1;
+  const nameOf = (id: string) => step.threads.find((t) => t.id === id)?.name ?? id;
+  const sub = step.subStep ? `, ${step.subStep.label} (part ${step.subStep.index + 1} of ${step.subStep.count})` : "";
+  const parts = [multi ? `Thread ${nameOf(step.activeThread)}, line ${step.location.line}${sub}.` : `Line ${step.location.line}${sub}.`];
   for (const thread of step.threads) {
     const frames = thread.frames.map((f) => {
       const locals = f.locals.filter((l) => l.name !== "this").map((l) => `${l.name} = ${text(l.value)}`);
       return locals.length ? `${frameTitle(f)} (${locals.join(", ")})` : frameTitle(f);
     });
-    parts.push(`${thread.name} Stack, bottom to top: ${frames.join(", then ")}.`);
+    const state = multi ? ` (${thread.state === "runnable" ? "ready" : thread.state === "terminated" ? "finished" : thread.state})` : "";
+    parts.push(frames.length ? `${thread.name}${state} Stack, bottom to top: ${frames.join(", then ")}.` : `${thread.name}${state}: no Frames.`);
   }
 
   const heap = visibleHeap(step, level);
@@ -73,11 +77,16 @@ export function describe(step: Step, level: DetailLevel): string {
       const elements = o.elements ? [`${o.elements.length} elements`] : [];
       const body = [...fields, ...elements].join(", ");
       const state = o.state === "live" ? "" : `, ${o.state}`;
-      return `${shortType(o.type)}${body ? ` (${body})` : ""}${state}`;
+      const lock = o.monitor?.owner
+        ? `, locked by ${nameOf(o.monitor.owner)}${o.monitor.blocked.length ? `, ${o.monitor.blocked.map(nameOf).join(" and ")} waiting to lock it` : ""}`
+        : "";
+      return `${shortType(o.type)}${body ? ` (${body})` : ""}${state}${lock}`;
     });
     parts.push(`Heap: ${objects.join("; ")}.`);
   }
 
+  const deadlock = step.events.find((e) => e.type === "deadlock");
+  if (deadlock && "threads" in deadlock) parts.push(`Deadlock: ${deadlock.threads.map(nameOf).join(" and ")} can never continue.`);
   const output = step.events.find((e) => e.type === "output");
   if (output && "text" in output) parts.push(`Printed: ${output.text.trim()}.`);
   return parts.join(" ");

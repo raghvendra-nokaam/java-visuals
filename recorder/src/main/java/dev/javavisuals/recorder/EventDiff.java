@@ -11,14 +11,17 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.HashSet;
 import java.util.Objects;
+import java.util.Set;
 
 /**
  * Fills Step.events. Calls, returns and output come from the debugger as they happen; allocations,
  * assignments and eligibility are derived by diffing against the previous Step.
  *
- * <p>Canonical order: returns, allocations, calls, assignments, eligibility, output. An assignment that
- * writes the value a slot already held is invisible to the diff and is not reported.
+ * <p>Canonical order: returns, thread starts, allocations, calls, assignments, lock changes, eligibility,
+ * thread ends, output, deadlock. An assignment that writes the value a slot already held is invisible to the
+ * diff and is not reported.
  */
 final class EventDiff {
 
@@ -27,6 +30,13 @@ final class EventDiff {
     static Step withEvents(Step step, Step prev, List<Event> observed) {
         List<Event> events = new ArrayList<>();
         observed.stream().filter(e -> e.type().equals("return")).forEach(events::add);
+
+        Set<String> threadsBefore = new HashSet<>();
+        if (prev != null) prev.threads().forEach(t -> threadsBefore.add(t.id()));
+        if (prev != null) {
+            step.threads().stream().filter(t -> !threadsBefore.contains(t.id()))
+                    .forEach(t -> events.add(Event.thread("thread-start", t.id())));
+        }
 
         Map<String, HeapObject> before = new HashMap<>();
         if (prev != null) prev.heap().forEach(o -> before.put(o.id(), o));
@@ -65,13 +75,33 @@ final class EventDiff {
             step.statics().forEach(s -> diffVariables(prevStatics.getOrDefault(s.className(), List.of()), s.fields(),
                     name -> Target.staticField(s.className(), name), events));
 
+            for (HeapObject obj : step.heap()) {
+                HeapObject old = before.get(obj.id());
+                String ownerBefore = old == null || old.monitor() == null ? null : old.monitor().owner();
+                String ownerNow = obj.monitor() == null ? null : obj.monitor().owner();
+                if (ownerBefore != null && !ownerBefore.equals(ownerNow)) events.add(Event.lock("lock-release", ownerBefore, obj.id()));
+                if (ownerNow != null && !ownerNow.equals(ownerBefore)) events.add(Event.lock("lock-acquire", ownerNow, obj.id()));
+                Set<String> blockedBefore = old == null || old.monitor() == null ? Set.of() : Set.copyOf(old.monitor().blocked());
+                if (obj.monitor() != null) {
+                    obj.monitor().blocked().stream().filter(t -> !blockedBefore.contains(t))
+                            .forEach(t -> events.add(Event.lock("lock-block", t, obj.id())));
+                }
+            }
+
             step.heap().stream()
                     .filter(o -> o.state().equals("eligible") && before.containsKey(o.id())
                             && before.get(o.id()).state().equals("live"))
                     .forEach(o -> events.add(Event.eligible(o.id())));
+
+            Map<String, String> stateBefore = new HashMap<>();
+            prev.threads().forEach(t -> stateBefore.put(t.id(), t.state()));
+            step.threads().stream()
+                    .filter(t -> t.state().equals("terminated") && !"terminated".equals(stateBefore.get(t.id())))
+                    .forEach(t -> events.add(Event.thread("thread-end", t.id())));
         }
 
         observed.stream().filter(e -> e.type().equals("output")).forEach(events::add);
+        observed.stream().filter(e -> e.type().equals("deadlock")).forEach(events::add);
         return new Step(step.location(), step.subStep(), step.activeThread(), step.threads(), step.statics(),
                 step.heap(), step.console(), events);
     }

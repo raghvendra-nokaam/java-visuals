@@ -36,7 +36,7 @@ const lessons = defineCollection({
     prerequisites: z.array(z.string().regex(/^[a-z0-9-]+\/[a-z0-9-]+$/, "a Lesson id like memory/method-calls")).default([]),
     detail: z.enum(["simple", "jvm"]).default("simple"),
     variants: z
-      .array(z.strictObject({ id: slug, label: z.string() }))
+      .array(z.strictObject({ id: slug, label: z.string(), schedule: slug.optional() }))
       .min(1)
       .default([{ id: "default", label: "As written" }])
       .refine((v) => v[0]!.id === "default", "the first Variant must be `default`")

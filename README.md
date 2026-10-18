@@ -11,6 +11,7 @@ It's for people who already know some Java syntax and want to understand what ha
 | **History** | The Sun years (1996 to 2006) · Java 5: new syntax, same JVM · Oracle, lambdas and modules · A release every six months (JDK 10 to 27) |
 | **The JVM** | How Java runs your code: javac, class loading, verification, the interpreter's operand stack, and the JIT |
 | **Memory** | Method calls and Frames · Objects and References · Pass-by-value · When objects become eligible |
+| **Concurrency** | One Heap, many Stacks · The lost update · Deadlock |
 
 Every lesson plays in the same Player: play, pause, step, scrub, change speed, use the keyboard (← → Space Home End), and answer **Predict Prompts** that pause the animation and ask what happens next. Memory lessons can switch between a **Simple** view and a **JVM detail** view that reveals JDK internals, and some lessons have **Variants** you can switch between at the same moment, such as reassigning a parameter vs. changing the object it points to.
 
@@ -18,7 +19,7 @@ Every lesson plays in the same Player: play, pause, step, scrub, change speed, u
 
 Nothing on the site is a hand-drawn approximation of Java's behaviour:
 
-1. **Execution Lessons** are real Java 25 programs. At build time the **recorder** runs each one on a real JVM under the Java Debug Interface and saves every Step (Stacks, Heap, statics, console) as a **Trace** ([ADR 0001](docs/adr/0001-pre-recorded-traces.md)).
+1. **Execution Lessons** are real Java 25 programs. At build time the **recorder** runs each one on a real JVM under the Java Debug Interface and saves every Step (Stacks, Heap, statics, console) as a **Trace** ([ADR 0001](docs/adr/0001-pre-recorded-traces.md)). Programs with several threads run under an author-written **Schedule** that fixes the interleaving, so a race or a deadlock happens the same way on every build ([ADR 0002](docs/adr/0002-author-defined-schedules-for-concurrency.md)).
 2. **Pipeline Lessons** show real `javap` output for their example program, generated the same way.
 3. **Timeline Lessons** are structured release data. Recent releases are checked against openjdk.org.
 4. The **site** replays all of it statically: no server, no Java in the browser.

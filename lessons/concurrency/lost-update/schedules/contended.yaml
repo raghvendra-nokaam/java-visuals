@@ -1,0 +1,10 @@
+# The same interleaving as "unlucky", but now the increment is inside synchronized.
+- run: main
+  until: join
+- run: A
+  until: increment
+  steps: 1        # A holds the lock and has read count
+- run: B
+  until: blocked  # B can't get the lock, so it has to wait
+- run: A          # A finishes and releases the lock
+- run: B          # now B gets the lock and sees A's write

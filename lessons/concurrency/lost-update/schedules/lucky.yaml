@@ -1,0 +1,5 @@
+# A finishes its whole increment before B starts.
+- run: main
+  until: join
+- run: A
+- run: B

@@ -74,9 +74,16 @@ public final class Main {
         LessonConfig config = LessonConfig.read(dir);
         Map<String, Trace> traces = new LinkedHashMap<>();
         Path tracesDir = dir.resolve("traces");
-        for (String variant : config.variants()) {
+        for (LessonConfig.VariantConfig v : config.variantConfigs()) {
+            String variant = v.id();
+            boolean hasOverlay = Files.isDirectory(dir.resolve("variants").resolve(variant));
+            if (!variant.equals(Lesson.DEFAULT_VARIANT) && !hasOverlay && v.schedule() == null) {
+                throw new IllegalArgumentException("Variant \"" + variant + "\" has neither a variants/" + variant
+                        + "/ directory nor a schedule, so it would be identical to default");
+            }
             Lesson lesson = Lesson.compile(dir, variant);
-            Trace trace = Recorder.record(lesson, variant);
+            Schedule schedule = v.schedule() == null ? Schedule.SEQUENTIAL : Schedule.read(dir, v.schedule());
+            Trace trace = Recorder.record(lesson, variant, schedule);
             TraceJson.write(trace, tracesDir.resolve(variant + ".json"));
             traces.put(variant, trace);
             System.err.printf("recorder: %s [%s] → %d Steps, %d Markers%n",

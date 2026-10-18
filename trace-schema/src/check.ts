@@ -100,7 +100,9 @@ export function checkTrace(trace: Trace): string[] {
     if (!active) {
       errors.push(`${at}.activeThread: unknown thread "${step.activeThread}"`);
     } else {
-      if (active.state !== "running") errors.push(`${at}: active thread must be "running", is "${active.state}"`);
+      if (active.state !== "running" && active.state !== "blocked") {
+        errors.push(`${at}: active thread must be "running" or "blocked", is "${active.state}"`);
+      }
       const top = active.frames.at(-1);
       if (top && top.line !== step.location.line) {
         errors.push(`${at}: top Frame is at line ${top.line} but the Step is at line ${step.location.line}`);
@@ -164,6 +166,9 @@ function checkEvents(
         else if (obj.state !== event.type) errors.push(`${where}: Object "${event.objectId}" has state "${obj.state}"`);
         break;
       }
+      case "deadlock":
+        for (const t of event.threads) if (!threadIds.has(t)) errors.push(`${where}: unknown thread "${t}"`);
+        break;
       case "lock-acquire":
       case "lock-release":
       case "lock-block":

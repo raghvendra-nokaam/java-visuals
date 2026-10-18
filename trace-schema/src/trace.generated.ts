@@ -37,7 +37,7 @@ export type HeapObject = {
    */
   elements?: Value[];
   /**
-   * Value-like rendering for inline Objects, e.g. "\"hello\"" or "42".
+   * Value-like rendering: for inline Objects ("\"hello\"", "42"), and the name of a Thread.
    */
   display?: string;
   state: "live" | "eligible" | "collected";
@@ -93,6 +93,15 @@ export type Event =
   | {
       type: "output";
       text: string;
+    }
+  | {
+      type: "deadlock";
+      /**
+       * Every thread blocked waiting for a lock another of them holds.
+       *
+       * @minItems 1
+       */
+      threads: [Id, ...Id[]];
     };
 /**
  * This interface was referenced by `Trace`'s JSON-Schema
@@ -171,7 +180,7 @@ export interface Step {
   location: Location;
   subStep?: SubStep;
   /**
-   * Id of the thread whose location this Step is.
+   * Id of the thread whose location this Step is. Usually running; blocked when the Step shows it stuck waiting for a lock.
    */
   activeThread: string;
   /**

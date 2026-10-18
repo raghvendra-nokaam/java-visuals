@@ -1,0 +1,11 @@
+# Each thread takes its first lock, then reaches for the one the other holds.
+- run: main
+  until: join
+- run: A
+  until: lock-second   # A holds checking
+- run: B
+  until: lock-second   # B holds savings
+- run: A
+  until: blocked       # A waits for savings
+- run: B
+  until: blocked       # B waits for checking: neither can ever continue

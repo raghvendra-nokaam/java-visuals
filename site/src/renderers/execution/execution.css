@@ -349,3 +349,148 @@
     background: color-mix(in srgb, var(--stack) 25%, var(--surface));
   }
 }
+
+/* ---- Threads ---------------------------------------------------------- */
+
+/* Several threads: Stacks side by side in a row, the shared Heap below them. */
+.memory[data-multi] {
+  grid-template-columns: 1fr;
+  gap: 1.5rem;
+}
+
+.memory[data-multi] .stacks {
+  flex-wrap: wrap;
+}
+
+.memory[data-multi] .stack {
+  flex: 1 1 10rem;
+  min-width: 10rem;
+}
+
+.stack[data-active] .stack-frames {
+  border-bottom-width: 5px;
+}
+
+.thread-name {
+  font-family: var(--font-mono);
+  color: var(--ink);
+}
+
+.thread-state {
+  margin-left: 0.5rem;
+  padding: 0 0.5rem;
+  border: 1px solid currentColor;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.thread-state[data-state="running"] {
+  color: var(--paper);
+  background: var(--stack);
+  border-color: var(--stack);
+}
+
+.thread-state[data-state="blocked"] {
+  color: var(--wrong);
+}
+
+.thread-state[data-state="waiting"],
+.thread-state[data-state="runnable"],
+.thread-state[data-state="terminated"] {
+  color: var(--ink-soft);
+}
+
+.stack-empty {
+  margin: 0;
+  font-style: italic;
+  color: var(--ink-soft);
+}
+
+.line-thread {
+  margin-left: 0.75rem;
+  padding: 0 0.375rem;
+  border: 1px solid var(--ink-soft);
+  border-radius: var(--radius-small);
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--ink-soft);
+  align-self: center;
+  line-height: 1.4;
+}
+
+.line-thread[data-active] {
+  color: var(--paper);
+  background: var(--stack);
+  border-color: var(--stack);
+}
+
+/* What part of the line is about to run, when a line is split into Sub-steps. */
+.sub-step {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-left: 0.75rem;
+  padding: 0 0.5rem;
+  border-radius: var(--radius-small);
+  background: var(--stack);
+  color: var(--paper);
+  font-size: 0.75rem;
+  font-weight: 700;
+  align-self: center;
+  line-height: 1.5;
+}
+
+.sub-step-dots {
+  display: inline-flex;
+  gap: 3px;
+}
+
+.sub-step-dots span {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  border: 1px solid var(--paper);
+}
+
+.sub-step-dots span[data-done] {
+  background: var(--paper);
+}
+
+.object[data-locked] {
+  box-shadow: inset 0 0 0 2px var(--heap);
+}
+
+.monitor {
+  display: grid;
+  gap: 0.125rem;
+  margin: 0.25rem 0 0.375rem;
+  font-size: 0.8125rem;
+}
+
+.monitor-owner {
+  font-weight: 700;
+}
+
+.monitor-blocked {
+  color: var(--wrong);
+  font-weight: 700;
+}
+
+.monitor-waiting {
+  color: var(--ink-soft);
+}
+
+.deadlock-banner {
+  grid-column: 1 / -1;
+  margin: 0;
+  padding: 0.625rem 0.875rem;
+  border: 2px solid var(--wrong);
+  border-radius: var(--radius-card);
+  color: var(--ink);
+  background: var(--surface);
+}
+
+.deadlock-banner strong {
+  color: var(--wrong);
+}

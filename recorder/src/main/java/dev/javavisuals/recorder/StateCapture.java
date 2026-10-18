@@ -73,18 +73,26 @@ final class StateCapture {
     record State(List<ThreadState> threads, List<StaticFields> statics, List<HeapObject> heap) {}
 
     /**
-     * @param frameIds    per thread, the ids of its live Lesson Program invocations, outermost first
-     * @param previousLine where execution was at the previous Step; new Objects are attributed to it
+     * @param active        the thread this Step is about
+     * @param activeState   how to show it: "running", or "blocked" when it stalled waiting for a lock
+     * @param frameIds      per thread, the ids of its live Lesson Program invocations, outermost first
+     * @param previousLine  where execution was at the previous Step; new Objects are attributed to it
+     * @param lessonThreads every thread that has run Lesson Program code, in the order they started
+     * @param finished      those that have ended; shown as terminated with an empty Stack
      */
-    State capture(ThreadReference active, Map<ThreadReference, List<String>> frameIds, Location previousLine)
+    State capture(ThreadReference active, String activeState, Map<ThreadReference, List<String>> frameIds,
+            Location previousLine, List<ThreadReference> lessonThreads, Set<ThreadReference> finished)
             throws IncompatibleThreadStateException {
         var walk = new Walk();
 
         List<ThreadState> threads = new ArrayList<>();
-        for (ThreadReference thread : vm.allThreads()) {
+        for (ThreadReference thread : lessonThreads) {
+            if (finished.contains(thread)) {
+                threads.add(new ThreadState(threadId(thread), thread.name(), "terminated", List.of()));
+                continue;
+            }
             List<String> ids = frameIds.getOrDefault(thread, List.of());
-            if (ids.isEmpty() && !thread.equals(active)) continue;
-            threads.add(captureThread(thread, thread.equals(active), ids, walk));
+            threads.add(captureThread(thread, thread.equals(active) ? activeState : null, ids, walk));
         }
 
         List<StaticFields> statics = captureStatics(walk);
@@ -167,7 +175,21 @@ final class StateCapture {
         return lessonClasses.contains(frame.location().declaringType().name());
     }
 
-    private ThreadState captureThread(ThreadReference thread, boolean isActive, List<String> ids, Walk walk)
+    /**
+     * Where a thread blocked on a lock really is. The JVM reports a thread stuck in {@code monitorenter} as
+     * already past it, which would show it on the line after the {@code synchronized}; step back to the lock.
+     */
+    static com.sun.jdi.Location blockedLocation(com.sun.jdi.Location location) {
+        byte[] code = location.method().bytecodes();
+        int at = (int) location.codeIndex();
+        if (at > 0 && at <= code.length && (code[at - 1] & 0xff) == 0xc2) { // monitorenter
+            var lock = location.method().locationOfCodeIndex(at - 1);
+            if (lock != null) return lock;
+        }
+        return location;
+    }
+
+    private ThreadState captureThread(ThreadReference thread, String activeState, List<String> ids, Walk walk)
             throws IncompatibleThreadStateException {
         List<StackFrame> lessonFrames = thread.frames().stream().filter(this::isLessonFrame).toList().reversed();
         if (lessonFrames.size() != ids.size()) {
@@ -177,11 +199,12 @@ final class StateCapture {
         List<Frame> frames = new ArrayList<>();
         for (int i = 0; i < lessonFrames.size(); i++) {
             StackFrame f = lessonFrames.get(i);
-            var location = f.location();
+            boolean top = i == lessonFrames.size() - 1;
+            var location = top && thread.status() == ThreadReference.THREAD_STATUS_MONITOR ? blockedLocation(f.location()) : f.location();
             frames.add(new Frame(ids.get(i), location.declaringType().name(), location.method().name(),
                     location.lineNumber(), locals(f, walk)));
         }
-        return new ThreadState(threadId(thread), thread.name(), isActive ? "running" : status(thread), frames);
+        return new ThreadState(threadId(thread), thread.name(), activeState != null ? activeState : status(thread), frames);
     }
 
     private List<Variable> locals(StackFrame frame, Walk walk) {
@@ -243,10 +266,13 @@ final class StateCapture {
             return new HeapObject(id, type, "array", null, elements, null, state, isInternal, false, allocated,
                     monitor(obj, threads));
         }
-        List<Variable> fields = opaque(obj) ? List.of() : instanceFields(obj.referenceType()).stream()
-                .map(f -> new Variable(f.name(), f.typeName(), refs.value(obj.getValue(f))))
-                .toList();
-        return new HeapObject(id, type, "object", fields, null, null, state, isInternal, false, allocated,
+        List<Variable> fields = obj instanceof ThreadReference t ? threadFields(t, refs)
+                : opaque(obj) ? List.of() : instanceFields(obj.referenceType()).stream()
+                        .map(f -> new Variable(f.name(), f.typeName(), refs.value(obj.getValue(f))))
+                        .toList();
+        // A Thread object is opaque, but its name is what the Learner needs to match it to a Stack.
+        String display = obj instanceof ThreadReference t ? javaLiteral(t.name()) : null;
+        return new HeapObject(id, type, "object", fields, null, display, state, isInternal, false, allocated,
                 monitor(obj, threads));
     }
 
@@ -271,6 +297,22 @@ final class StateCapture {
         } catch (IncompatibleThreadStateException e) {
             return null;
         }
+    }
+
+    /**
+     * A Thread's Runnable. In JDK 25 it lives in {@code Thread.holder.task}; if a future JDK moves it, threads
+     * simply show no fields rather than failing the recording.
+     */
+    static com.sun.jdi.Value threadTask(ThreadReference thread) {
+        Field holderField = thread.referenceType().fieldByName("holder");
+        if (holderField == null || !(thread.getValue(holderField) instanceof ObjectReference holder)) return null;
+        Field task = holder.referenceType().fieldByName("task");
+        return task == null ? null : holder.getValue(task);
+    }
+
+    private static List<Variable> threadFields(ThreadReference thread, Walk.ReadOnly refs) {
+        com.sun.jdi.Value task = threadTask(thread);
+        return task == null ? List.of() : List.of(new Variable("task", "java.lang.Runnable", refs.value(task)));
     }
 
     /** Instance fields, superclass fields first, each class in declaration order. */
@@ -374,6 +416,12 @@ final class StateCapture {
         void drain() {
             while (!queue.isEmpty()) {
                 ObjectReference obj = queue.poll();
+                if (obj instanceof ThreadReference t) {
+                    // The one part of a Thread the Learner cares about: the Runnable it will run.
+                    com.sun.jdi.Value task = threadTask(t);
+                    if (task != null) value(task, true);
+                    continue;
+                }
                 if (obj instanceof StringReference || BOXED.contains(obj.referenceType().name()) || opaque(obj)) {
                     continue;
                 }

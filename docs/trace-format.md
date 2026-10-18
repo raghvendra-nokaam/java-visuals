@@ -22,7 +22,7 @@ Each Step carries the complete state, not a diff, so scrubbing to any Step is a 
 
 Calls, returns and output are observed directly by the debugger. Allocations, assignments and eligibility are derived by diffing consecutive Steps, so:
 
-- Events use a **canonical order**: returns, allocations, calls, assignments, eligibility, output. This isn't necessarily chronological. For example, a constructor's field writes are reported on the Step after it returns.
+- Events use a **canonical order**: returns, thread starts, allocations, calls, assignments, lock changes (release, acquire, block), eligibility, thread ends, output, deadlock. This isn't necessarily chronological. For example, a constructor's field writes are reported on the Step after it returns.
 - A write that stores the value a slot already held (`y = 0` over a default `0`) isn't visible and isn't reported.
 
 If Trace files get too large, version 2 may switch to keyframes plus deltas. Lesson Programs are kept tiny, so we're not doing that yet.
@@ -56,9 +56,19 @@ If Trace files get too large, version 2 may switch to keyframes plus deltas. Les
 
 `markers` maps Marker names (from `// @mark name` comments in the Lesson Program) to Step indices. An unqualified name resolves to the **first** Step whose `location` is that line. A qualified name (`name@thread#hit`) means "the *hit*-th time *thread* is at that line". Narration and Predict Prompts reference Markers, never raw Step indices. ✔ Every index exists. The recorder must fail the build if a Marker matches no Step.
 
+## Threads
+
+- `threads` lists every thread that has run Lesson Program code, in the order they started, `main` first. A thread that has left Lesson code for good stays in the list as `terminated` with an empty Stack.
+- `activeThread` is the thread this Step is about. It's normally `running`. It's `blocked` on the Step that shows it stuck waiting for a lock, and its top Frame is then at the `synchronized` line it's stuck on. ✔ The active thread is `running` or `blocked`.
+- Other threads are `runnable` (ready, waiting for their turn), `blocked` (waiting to acquire a lock), `waiting` (`join`, `wait`, `sleep`) or `terminated`.
+- A `java.lang.Thread` Object on the Heap shows the thread's name as its `display` and has one field, `task`: the Runnable it runs. That's the reference that keeps the Runnable alive.
+- A `monitor` appears on any Object whose lock is held or contended: `owner`, `blocked` threads wanting it, and `waiting` threads inside `wait()` on it. `join` waits on the Thread Object's monitor, so a joining thread shows up there.
+- Exactly one thread runs between two Steps, chosen by the Schedule ([ADR 0002](adr/0002-author-defined-schedules-for-concurrency.md)). A thread appears in `threads` from its first Lesson line, never mid-startup.
+- If no thread can make progress because they're blocked on each other's locks, the last Step carries a `deadlock` event naming them and the Trace ends there. Markers on lines the program never reached are then left out of `markers` rather than failing the recording.
+
 ## Sub-steps
 
-When a line is split (e.g. `count++` → read, add, write), each part is its own Step at the same `location` with `subStep: {index, count, label}`. Not used in v1 lessons, but the format supports it for the Concurrency Track.
+On a line marked `// @substeps`, each meaningful bytecode instruction is its own Step at the same `location`, with `subStep: {index, count, label}`. `count++` on a field becomes "read count (5)", "add" and "write count". Field reads show the value they're about to read. Instructions that only move values around (loads, dups, constants) don't get Steps. A thread's Sub-steps for one visit to a line are numbered together even when other threads' Steps are interleaved between them. A visit with only one meaningful instruction is an ordinary Step.
 
 ## Console
 

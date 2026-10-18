@@ -142,6 +142,59 @@ class RecorderTest {
         assertTrue(Main.findRecordableLessons(Path.of("build/pipeline-lesson/lessons")).contains(dir));
     }
 
+    @Test
+    void unluckyScheduleLosesAnUpdateTheSameWayEveryTime() throws Exception {
+        Path dir = REPO.resolve("lessons/concurrency/lost-update");
+        Schedule unlucky = Schedule.read(dir, "unlucky");
+        Trace first = Recorder.record(Lesson.compile(dir), "default", unlucky);
+        Trace second = Recorder.record(Lesson.compile(dir), "default", unlucky);
+        assertEquals(TraceJson.toJson(first), TraceJson.toJson(second));
+
+        assertEquals("1\n", first.steps().getLast().console());
+        List<String> reads = first.steps().stream()
+                .filter(s -> s.subStep() != null && s.subStep().label().startsWith("read count"))
+                .map(s -> s.activeThread() + " " + s.subStep().label()).toList();
+        assertEquals(List.of("A read count (0)", "B read count (0)"), reads);
+    }
+
+    @Test
+    void synchronizedMakesTheSecondThreadWaitForTheLock() throws Exception {
+        Path dir = REPO.resolve("lessons/concurrency/lost-update");
+        Trace trace = Recorder.record(Lesson.compile(dir, "synchronized"), "synchronized", Schedule.read(dir, "contended"));
+
+        Step blocked = trace.steps().stream().filter(s -> s.threads().stream()
+                .anyMatch(t -> t.id().equals(s.activeThread()) && t.state().equals("blocked"))).findFirst().orElseThrow();
+        assertEquals("B", blocked.activeThread());
+        HeapObject counter = objectsOfTypeIn(blocked, "Counter").getFirst();
+        assertEquals("A", counter.monitor().owner());
+        assertEquals(List.of("B"), counter.monitor().blocked());
+        assertTrue(blocked.events().contains(Event.lock("lock-block", "B", counter.id())));
+        assertEquals("2\n", trace.steps().getLast().console());
+    }
+
+    @Test
+    void opposingLockOrderEndsInADeadlock() throws Exception {
+        Path dir = REPO.resolve("lessons/concurrency/deadlock");
+        Trace trace = Recorder.record(Lesson.compile(dir), "default", Schedule.read(dir, "deadlock"));
+        Step last = trace.steps().getLast();
+        Event deadlock = last.events().stream().filter(e -> e.type().equals("deadlock")).findFirst().orElseThrow();
+        assertEquals(List.of("A", "B"), deadlock.threads());
+        assertFalse(trace.markers().containsKey("result"), "the program never reaches its result line");
+    }
+
+    @Test
+    void aScheduleNamingAThreadThatNeverStartedFailsClearly() throws Exception {
+        Path dir = REPO.resolve("lessons/concurrency/lost-update");
+        var bad = new Schedule("bad", List.of(new Schedule.Turn("main", "join", 0), new Schedule.Turn("Z", null, 0)));
+        var error = org.junit.jupiter.api.Assertions.assertThrows(IllegalStateException.class,
+                () -> Recorder.record(Lesson.compile(dir), "default", bad));
+        assertTrue(error.getMessage().contains("turn 2") && error.getMessage().contains("no thread named \"Z\""), error.getMessage());
+    }
+
+    private static List<HeapObject> objectsOfTypeIn(Step step, String type) {
+        return step.heap().stream().filter(o -> o.type().equals(type)).toList();
+    }
+
     private static void copyTree(Path from, Path to) throws java.io.IOException {
         try (var paths = Files.walk(from)) {
             for (Path p : paths.toList()) {

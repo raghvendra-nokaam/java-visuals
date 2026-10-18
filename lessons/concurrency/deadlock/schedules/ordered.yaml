@@ -1,0 +1,9 @@
+# The same moment as the deadlock, but both threads now start with the same lock.
+- run: main
+  until: join
+- run: A
+  until: lock-second   # A holds checking
+- run: B
+  until: blocked       # B also wants checking first, so it waits without holding anything
+- run: A               # A finishes and releases both locks
+- run: B

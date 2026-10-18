@@ -29,19 +29,39 @@ export default function ExecutionView({ trace, index, level, explanation }: Prop
     hoverLine === null ? [] : step.heap.filter((o) => o.allocatedAt?.line === hoverLine).map((o) => o.id),
   );
   const heap = visibleHeap(step, level);
+  const multi = step.threads.length > 1;
+  const deadlock = step.events.find((e): e is Extract<typeof e, { type: "deadlock" }> => e.type === "deadlock");
 
   return (
     <div className="exec">
       <CodePanel trace={trace} step={step} highlightLine={highlightLine} onHoverLine={setHoverLine} />
       <div className="exec-side">
-        <div className="memory" ref={memoryRef}>
-          <section className="stacks" aria-label="Stacks">
+        <div className="memory" ref={memoryRef} data-multi={multi || undefined}>
+          {deadlock && (
+            <p className="deadlock-banner" role="status">
+              <strong>Deadlock.</strong> {listNames(deadlock.threads.map((id) => threadName(step, id)))} are each waiting for a
+              lock another of them holds. None of them can ever continue.
+            </p>
+          )}
+          <section className="stacks" aria-label={multi ? "Threads" : "Stacks"}>
             {step.threads.map((thread) => (
-              <div className="stack" key={thread.id}>
+              <div className="stack" key={thread.id} data-active={(multi && thread.id === step.activeThread) || undefined}>
                 <h2 className="region-title">
-                  Stack <span className="region-note">{thread.name} thread</span>
+                  {multi ? (
+                    <>
+                      Thread <span className="thread-name">{thread.name}</span>
+                      <span className="thread-state" data-state={thread.state}>
+                        {threadStateLabel[thread.state]}
+                      </span>
+                    </>
+                  ) : (
+                    <>
+                      Stack <span className="region-note">{thread.name} thread</span>
+                    </>
+                  )}
                 </h2>
                 <div className="stack-frames">
+                  {thread.frames.length === 0 && <p className="stack-empty">{thread.state === "terminated" ? "Finished" : "Empty"}</p>}
                   <AnimatePresence mode="popLayout" initial={false}>
                     {thread.frames.map((frame, i) => (
                       <FrameCard
@@ -103,13 +123,23 @@ function CodePanel({
 }) {
   const file = trace.source.find((f) => f.path === step.location.file) ?? trace.source[0]!;
   const filesByClass = useMemo(() => classFiles(trace), [trace]);
+  const active = step.threads.find((t) => t.id === step.activeThread);
   const callSites = new Set(
-    step.threads
-      .flatMap((t) => t.frames.slice(0, -1))
+    (active?.frames.slice(0, -1) ?? [])
       .filter((f) => filesByClass.get(f.className) === file.path)
       .map((f) => f.line)
       .filter((l) => l !== step.location.line),
   );
+  // With several threads, mark the line each one is at (in this file).
+  const multi = step.threads.length > 1;
+  const threadsAt = new Map<number, string[]>();
+  if (multi) {
+    for (const t of step.threads) {
+      const top = t.frames.at(-1);
+      if (!top || filesByClass.get(top.className) !== file.path) continue;
+      threadsAt.set(top.line, [...(threadsAt.get(top.line) ?? []), t.id]);
+    }
+  }
   const linesRef = useRef<HTMLOListElement>(null);
   // When the code panel scrolls (stacked layouts), keep the current line visible without moving the page.
   useLayoutEffect(() => {
@@ -142,6 +172,21 @@ function CodePanel({
                 {line}
               </span>
               <code>{stripMarkers(text) || " "}</code>
+              {(threadsAt.get(line) ?? []).map((id) => (
+                <span key={id} className="line-thread" data-active={id === step.activeThread || undefined}>
+                  {threadName(step, id)}
+                </span>
+              ))}
+              {state === "current" && step.subStep && (
+                <span className="sub-step" title={`Part ${step.subStep.index + 1} of ${step.subStep.count} of this line`}>
+                  {step.subStep.label}
+                  <span className="sub-step-dots" aria-hidden="true">
+                    {Array.from({ length: step.subStep.count }, (_, k) => (
+                      <span key={k} data-done={k <= step.subStep!.index || undefined} />
+                    ))}
+                  </span>
+                </span>
+              )}
             </li>
           );
         })}
@@ -228,6 +273,7 @@ function ObjectCard({
       data-state={obj.state}
       data-internal={obj.internal || undefined}
       data-linked={linked || undefined}
+      data-locked={obj.monitor?.owner ? true : undefined}
       initial={{ opacity: 0, scale: 0.92 }}
       animate={{ opacity: 1, scale: 1 }}
       exit={{ opacity: 0, scale: 0.92 }}
@@ -241,7 +287,8 @@ function ObjectCard({
         {obj.state !== "live" && <span className="object-state">{obj.state === "eligible" ? "eligible for GC" : "collected"}</span>}
         {obj.internal && <span className="object-state">JDK internal</span>}
       </div>
-      {obj.inline && <div className="object-display">{obj.display}</div>}
+      {obj.display && <div className="object-display">{obj.display}</div>}
+      {obj.monitor && <MonitorBadges monitor={obj.monitor} step={step} />}
       {obj.fields && obj.fields.length > 0 && (
         <dl className="vars">
           {obj.fields.map((f) => (
@@ -261,6 +308,41 @@ function ObjectCard({
         </ol>
       )}
     </motion.div>
+  );
+}
+
+const threadStateLabel: Record<string, string> = {
+  running: "running",
+  runnable: "ready",
+  blocked: "blocked",
+  waiting: "waiting",
+  terminated: "finished",
+};
+
+function threadName(step: Step, id: string): string {
+  return step.threads.find((t) => t.id === id)?.name ?? id;
+}
+
+function listNames(names: string[]): string {
+  return names.length <= 1 ? (names[0] ?? "") : `${names.slice(0, -1).join(", ")} and ${names.at(-1)}`;
+}
+
+/** Who holds this Object's lock, and who is waiting for it. */
+function MonitorBadges({ monitor, step }: { monitor: NonNullable<HeapObject["monitor"]>; step: Step }) {
+  return (
+    <div className="monitor">
+      {monitor.owner && (
+        <span className="monitor-owner">
+          Locked by <strong>{threadName(step, monitor.owner)}</strong>
+        </span>
+      )}
+      {monitor.blocked.length > 0 && (
+        <span className="monitor-blocked">Waiting to lock: {listNames(monitor.blocked.map((id) => threadName(step, id)))}</span>
+      )}
+      {monitor.waiting.length > 0 && (
+        <span className="monitor-waiting">Waiting on it: {listNames(monitor.waiting.map((id) => threadName(step, id)))}</span>
+      )}
+    </div>
   );
 }
 

@@ -1,0 +1,13 @@
+title: One Heap, many Stacks
+kind: execution
+order: 1
+summary: Start two threads and watch each get its own Stack while both write into the same object on the Heap.
+prerequisites:
+  - memory/objects-and-references
+detail: simple
+variants:
+  - id: default
+    label: One after another
+  - id: interleaved
+    label: Interleaved
+    schedule: interleaved

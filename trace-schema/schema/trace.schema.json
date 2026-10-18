@@ -129,7 +129,7 @@
           "$ref": "#/$defs/SubStep"
         },
         "activeThread": {
-          "description": "Id of the thread whose location this Step is.",
+          "description": "Id of the thread whose location this Step is. Usually running; blocked when the Step shows it stuck waiting for a lock.",
           "$ref": "#/$defs/Id"
         },
         "threads": {
@@ -411,7 +411,7 @@
           }
         },
         "display": {
-          "description": "Value-like rendering for inline Objects, e.g. \"\\\"hello\\\"\" or \"42\".",
+          "description": "Value-like rendering: for inline Objects (\"\\\"hello\\\"\", \"42\"), and the name of a Thread.",
           "type": "string"
         },
         "state": {
@@ -686,6 +686,27 @@
             },
             "text": {
               "type": "string"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "threads"
+          ],
+          "properties": {
+            "type": {
+              "const": "deadlock"
+            },
+            "threads": {
+              "description": "Every thread blocked waiting for a lock another of them holds.",
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "$ref": "#/$defs/Id"
+              }
             }
           }
         }

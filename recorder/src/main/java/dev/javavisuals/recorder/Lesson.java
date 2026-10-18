@@ -41,11 +41,9 @@ record Lesson(String id, Path dir, List<Path> sources, Path classesDir, Set<Stri
         dir = dir.toAbsolutePath().normalize();
         Map<String, Path> byName = new TreeMap<>();
         javaFiles(dir).forEach(p -> byName.put(p.getFileName().toString(), p));
-        if (!variantId.equals(DEFAULT_VARIANT)) {
-            Path overlay = dir.resolve("variants").resolve(variantId);
-            if (!Files.isDirectory(overlay)) {
-                throw new IllegalArgumentException("Variant \"" + variantId + "\" has no directory " + overlay);
-            }
+        // A Variant's overlay is optional: a Variant may differ only in its Schedule.
+        Path overlay = dir.resolve("variants").resolve(variantId);
+        if (!variantId.equals(DEFAULT_VARIANT) && Files.isDirectory(overlay)) {
             javaFiles(overlay).forEach(p -> byName.put(p.getFileName().toString(), p));
         }
         List<Path> sources = byName.values().stream()

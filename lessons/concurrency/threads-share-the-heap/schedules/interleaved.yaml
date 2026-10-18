@@ -1,0 +1,9 @@
+# The scheduler can switch threads between any two Steps.
+- run: main
+  until: join
+- run: A
+  until: sign     # A has its local variable, and is about to write
+- run: B
+  until: sign     # B gets a turn before A writes
+- run: A
+- run: B

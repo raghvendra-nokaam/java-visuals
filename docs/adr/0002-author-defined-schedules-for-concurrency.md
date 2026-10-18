@@ -6,3 +6,10 @@ A race-condition Variant recorded under natural OS scheduling usually runs *corr
 
 - **Natural scheduling** — rejected: non-deterministic; the race rarely shows.
 - **Hand-editing the Trace to fake the race** — rejected: breaks the guarantee that every Trace is real JVM behaviour (ADR-0001).
+
+## Consequences
+
+- The recorder controls threads by suspending them, not by changing the program: every JDI event suspends only its own thread, and every Lesson thread except the scheduled one stays suspended ("parked"). Parking is just not resuming, so each parked thread holds exactly one suspension. An earlier attempt that suspended the whole VM on every event and juggled per-thread counts let JDWP's own resume logic release parked threads.
+- A newly started thread is run to its first Lesson line before the next capture. It's found in the thread list, not only through its start event, because that event can arrive after the parent has moved on.
+- Detecting that the scheduled thread is blocked or waiting relies on it producing no event for a short time (400 ms) and then inspecting its status. This makes recording concurrency lessons slower, but it doesn't make them nondeterministic: the status, not the timing, decides what happens next.
+

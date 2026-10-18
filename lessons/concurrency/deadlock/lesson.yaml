@@ -1,0 +1,14 @@
+title: Deadlock
+kind: execution
+order: 3
+summary: Two transfers lock the same two accounts in opposite orders and end up waiting for each other forever. Then one rule makes it impossible.
+prerequisites:
+  - concurrency/lost-update
+detail: simple
+variants:
+  - id: default
+    label: Opposite lock order
+    schedule: deadlock
+  - id: ordered
+    label: Same lock order
+    schedule: ordered

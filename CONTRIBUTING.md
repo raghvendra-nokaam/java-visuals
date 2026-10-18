@@ -37,7 +37,7 @@ The program *is* the lesson, so keep it small enough to read in one glance.
 - **Java 25.** The entry point is always `Program.main`.
 - **Short.** Aim for 15 to 40 Steps. The recorder stops at 2,000 Steps or 300 Heap objects, but a Learner gives up long before that.
 - **Deterministic.** No input, randomness, clocks, files or network. Every build must record the same Trace.
-- **Single-threaded for now.** Concurrency needs Schedules ([ADR 0002](docs/adr/0002-author-defined-schedules-for-concurrency.md)), which arrive with the Concurrency Track.
+- **Threads need a plan.** A program that starts threads runs them one at a time. Name every thread (`new Thread(task, "A")`), and write a Schedule when the order matters ([lesson format](docs/lesson-format.md#schedules)). Use `synchronized` blocks rather than `synchronized` methods, and mark the line where a race happens with `// @substeps`. The Concurrency Track lessons show all of this.
 - **Let nothing throw out of `main`.** An uncaught exception ends the recording early.
 - **One class per file when you have Variants.** A Variant's directory replaces whole files, so a helper class that lives inside `Program.java` would vanish from the Variant. See `lessons/memory/pass-by-value/` for the pattern.
 - **Prefer plain code over clever code.** A `switch` on an enum, for example, makes `javac` generate a hidden helper class that shows up as noise.

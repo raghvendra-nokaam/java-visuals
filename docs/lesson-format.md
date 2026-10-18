@@ -40,6 +40,7 @@ variants:           # optional; defaults to a single "default" Variant
     label: As written
   - id: synchronized
     label: With synchronized
+    schedule: contended   # optional: record under schedules/contended.yaml
 ```
 
 ## timeline.yaml
@@ -73,7 +74,30 @@ If the lesson directory has a `Program.java`, `npm run record` writes its real `
 
 ## Variants
 
-A Variant is the Lesson's root `.java` files with same-named files from `variants/<id>/` replacing them. Put only the changed files in the Variant's directory. The `default` Variant is the root files as they are.
+A Variant is the Lesson's root `.java` files with same-named files from `variants/<id>/` replacing them (files that exist only in the Variant's directory are added). Put only the changed files in the Variant's directory. The `default` Variant is the root files as they are. A Variant may instead, or also, name a Schedule, so "the same code under different timing" is a Variant too.
+
+## Schedules
+
+A Lesson Program that starts threads runs them one at a time, in a deterministic order. Without a Schedule each thread runs until it finishes, blocks or waits, in the order the threads started. A Schedule in `schedules/<id>.yaml` picks the interleaving instead, as a list of turns:
+
+```yaml
+- run: main
+  until: join          # a Marker: stop when main is about to run that line
+- run: A
+  until: increment
+  steps: 1             # ...then this many more of A's Steps (e.g. one Sub-step: the read)
+- run: B
+  until: blocked       # or `waiting`: B's turn ends when it can't continue
+- run: A               # no `until`: run A until it finishes
+```
+
+`run` names a thread by its Java name (`new Thread(task, "A")`). After the last turn, any threads still unfinished run one at a time in start order. A Schedule that names a thread that hasn't started, expects a Marker a thread never reaches, or leaves turns unused fails the recording and names the turn. If every remaining thread is blocked on another's lock, the recording ends in a deadlock, which is a valid ending for a lesson about deadlocks.
+
+Use `synchronized` blocks rather than `synchronized` methods in Lesson Programs, so a blocked thread is shown at a line of your code.
+
+## Sub-steps
+
+Add `// @substeps` to a line to record it one meaningful instruction at a time (see [trace-format.md](trace-format.md#sub-steps)). Put it on lines where a race happens *inside* the line, like `count++`, and nowhere else: it makes a lesson longer. It can share the comment with a Marker: `count++; // @mark increment @substeps`.
 
 Give every Variant the same Markers wherever the moment is the same. Switching Variant during playback jumps to the latest Marker passed, so shared Markers are what let the Learner compare "the same moment" across Variants.
 

@@ -1,0 +1,17 @@
+title: The lost update
+kind: execution
+order: 2
+summary: Two threads each add 1 to a shared counter, and the result is sometimes 1. See the exact moment an update disappears, and how synchronized stops it.
+prerequisites:
+  - concurrency/threads-share-the-heap
+detail: simple
+variants:
+  - id: default
+    label: Unlucky timing
+    schedule: unlucky
+  - id: lucky
+    label: Lucky timing
+    schedule: lucky
+  - id: synchronized
+    label: With synchronized
+    schedule: contended

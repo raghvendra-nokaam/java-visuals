@@ -30,6 +30,10 @@ for (const file of files) {
       .join(" ");
     const marker = markerAt.has(i) ? `@${markerAt.get(i)}` : "";
     const events = step.events.map((e) => e.type).join(",");
-    console.log(`${String(i).padStart(3)}  L${String(step.location.line).padEnd(4)}${marker.padEnd(24)}${stack.padEnd(60)}  [${heap}]  ${events}`);
+    const multiThread = step.threads.length > 1;
+    const active = step.threads.find((t) => t.id === step.activeThread);
+    const who = multiThread ? `${step.activeThread}${active?.state === "running" ? "" : `(${active?.state})`} `.padEnd(12) : "";
+    const sub = step.subStep ? ` [${step.subStep.index + 1}/${step.subStep.count} ${step.subStep.label}]` : "";
+    console.log(`${String(i).padStart(3)}  ${who}L${String(step.location.line).padEnd(4)}${(marker + sub).padEnd(30)}${stack.padEnd(60)}  [${heap}]  ${events}`);
   });
 }

@@ -94,6 +94,25 @@ select {
   line-height: 1.55;
 }
 
+.narration-text + .narration-text {
+  margin-top: 0.75rem;
+}
+
+.narration code,
+.prompt code {
+  font-family: var(--font-mono);
+  font-size: 0.9em;
+  padding: 0.05em 0.3em;
+  background: var(--stack-tint);
+  border-radius: var(--radius-small);
+}
+
+.narration-next {
+  margin: 0.75rem 0 0;
+  font-size: 1.125rem;
+  font-weight: 700;
+}
+
 .narration-hint {
   margin: 0.5rem 0 0;
   color: var(--stack);

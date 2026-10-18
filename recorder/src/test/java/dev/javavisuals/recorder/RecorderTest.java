@@ -105,6 +105,37 @@ class RecorderTest {
         assertNotNull(last.events().stream().filter(e -> e.type().equals("output")).findFirst().orElse(null));
     }
 
+    @Test
+    void recordsEveryVariantWithOverlaidSources() throws Exception {
+        Path dir = Path.of("build/variants-lesson");
+        copyTree(Path.of("src/test/resources/lessons/test/variants"), dir.resolve("lessons/test/variants"));
+        Path lesson = dir.resolve("lessons/test/variants");
+        Files.createDirectories(lesson.resolve("traces"));
+        Files.writeString(lesson.resolve("traces/removed-variant.json"), "{}");
+
+        var traces = Main.recordLesson(lesson);
+
+        assertEquals(List.of("default", "two-calls"), List.copyOf(traces.keySet()));
+        assertEquals("2\n", traces.get("default").steps().getLast().console());
+        assertEquals("6\n", traces.get("two-calls").steps().getLast().console());
+        // Helper.java is shared; Program.java comes from the overlay.
+        assertEquals(List.of("Program.java", "Helper.java"),
+                traces.get("two-calls").source().stream().map(Trace.SourceFile::path).toList());
+        assertEquals(traces.get("default").markers().keySet(), traces.get("two-calls").markers().keySet());
+        assertTrue(Files.exists(lesson.resolve("traces/two-calls.json")));
+        assertFalse(Files.exists(lesson.resolve("traces/removed-variant.json")), "stale Trace should be removed");
+    }
+
+    private static void copyTree(Path from, Path to) throws java.io.IOException {
+        try (var paths = Files.walk(from)) {
+            for (Path p : paths.toList()) {
+                Path target = to.resolve(from.relativize(p).toString());
+                if (Files.isDirectory(p)) Files.createDirectories(target);
+                else Files.copy(p, target, java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+            }
+        }
+    }
+
     private static Step firstStepAtLine(int line) {
         return edge.steps().stream().filter(s -> s.location().line() == line).findFirst().orElseThrow();
     }

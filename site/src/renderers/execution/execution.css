@@ -312,6 +312,10 @@
   .exec {
     grid-template-columns: 1fr;
   }
+
+  .memory {
+    min-height: 0;
+  }
 }
 
 @media (max-width: 40rem) {

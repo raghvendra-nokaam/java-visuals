@@ -1,0 +1,9 @@
+title: Method calls and Frames
+kind: execution
+order: 1
+summary: Watch main call add, a Point land on the Heap, and that Point become eligible for garbage collection.
+prerequisites: []
+detail: simple
+variants:
+  - id: default
+    label: As written

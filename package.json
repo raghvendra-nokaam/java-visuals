@@ -10,7 +10,7 @@
     "build": "npm run record && npm run build -w trace-schema && npm run build -w site",
     "validate": "npm run validate -w trace-schema",
     "check": "npm run build -w trace-schema && npm run validate && npm run check -w site",
-    "record": "recorder/gradlew -p recorder run -q --args=\"record lessons/memory/method-calls\"",
+    "record": "recorder/gradlew -p recorder run -q --args=\"record-all lessons\"",
     "test": "npm test -w site && recorder/gradlew -p recorder test -q"
   },
   "engines": {

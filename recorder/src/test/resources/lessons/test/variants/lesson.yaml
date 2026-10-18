@@ -1,0 +1,11 @@
+title: Variant overlay test
+kind: execution
+order: 1
+summary: Test fixture for Variant overlays.
+prerequisites: []
+detail: simple
+variants:
+  - id: default
+    label: One call
+  - id: two-calls
+    label: Two calls

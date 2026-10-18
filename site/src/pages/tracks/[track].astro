@@ -1,0 +1,48 @@
+---
+import Base from "../../layouts/Base.astro";
+import LessonList from "../../components/curriculum/LessonList.tsx";
+import { toListItems } from "../../components/curriculum/items";
+import { loadCurriculum, type Track } from "../../content/curriculum";
+import { href } from "../../links";
+
+export async function getStaticPaths() {
+  const { tracks, lessons } = await loadCurriculum();
+  return tracks.map((track) => ({ params: { track: track.id }, props: { track, items: toListItems(track.lessons, lessons) } }));
+}
+
+interface Props {
+  track: Track;
+  items: ReturnType<typeof toListItems>;
+}
+const { track, items } = Astro.props;
+---
+
+<Base title={`${track.data.title} | Java Visuals`} description={track.data.description}>
+  <main class="page">
+    <nav class="crumbs" aria-label="Breadcrumb"><a href={href("/")}>Java Visuals</a></nav>
+    <h1>{track.data.title}</h1>
+    <p class="lede">{track.data.description}</p>
+    {items.length ? <LessonList client:load lessons={items} /> : <p>Lessons for this Track are on the way.</p>}
+  </main>
+</Base>
+
+<style>
+  .page {
+    max-width: 48rem;
+    margin: 0 auto;
+    padding: 2rem 1rem 4rem;
+  }
+  .crumbs {
+    font-size: 0.9375rem;
+  }
+  h1 {
+    font-size: 2.25rem;
+    line-height: 1.15;
+    margin: 0.75rem 0 0.5rem;
+  }
+  .lede {
+    font-size: 1.1875rem;
+    max-width: 60ch;
+    margin: 0 0 2rem;
+  }
+</style>

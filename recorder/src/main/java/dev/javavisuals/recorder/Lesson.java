@@ -6,6 +6,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -14,7 +16,10 @@ import javax.tools.JavaFileObject;
 import javax.tools.ToolProvider;
 
 /**
- * A Lesson directory on disk and its compiled Lesson Program.
+ * One Variant of a Lesson's Program, compiled.
+ *
+ * <p>A Variant's sources are the lesson directory's .java files, with any same-named files in
+ * {@code variants/<id>/} replacing them (docs/lesson-format.md). The {@code default} Variant is the root files as-is.
  *
  * @param id          lesson path relative to lessons/, e.g. "memory/method-calls"
  * @param sources     the Lesson Program's .java files, entry file first
@@ -23,17 +28,29 @@ import javax.tools.ToolProvider;
  */
 record Lesson(String id, Path dir, List<Path> sources, Path classesDir, Set<String> classNames) {
 
-    /** By convention the entry point is {@code Program.main}; lesson.yaml may override this in Phase 4. */
+    /** Every Lesson Program's entry point is {@code Program.main}. */
     static final String MAIN_CLASS = "Program";
 
+    static final String DEFAULT_VARIANT = "default";
+
     static Lesson compile(Path dir) throws IOException {
+        return compile(dir, DEFAULT_VARIANT);
+    }
+
+    static Lesson compile(Path dir, String variantId) throws IOException {
         dir = dir.toAbsolutePath().normalize();
-        List<Path> sources;
-        try (Stream<Path> files = Files.list(dir)) {
-            sources = files.filter(p -> p.toString().endsWith(".java"))
-                    .sorted((a, b) -> isEntry(a) == isEntry(b) ? a.compareTo(b) : isEntry(a) ? -1 : 1)
-                    .toList();
+        Map<String, Path> byName = new TreeMap<>();
+        javaFiles(dir).forEach(p -> byName.put(p.getFileName().toString(), p));
+        if (!variantId.equals(DEFAULT_VARIANT)) {
+            Path overlay = dir.resolve("variants").resolve(variantId);
+            if (!Files.isDirectory(overlay)) {
+                throw new IllegalArgumentException("Variant \"" + variantId + "\" has no directory " + overlay);
+            }
+            javaFiles(overlay).forEach(p -> byName.put(p.getFileName().toString(), p));
         }
+        List<Path> sources = byName.values().stream()
+                .sorted((a, b) -> isEntry(a) == isEntry(b) ? a.compareTo(b) : isEntry(a) ? -1 : 1)
+                .toList();
         if (sources.isEmpty() || !isEntry(sources.getFirst())) {
             throw new IllegalArgumentException(dir + " has no " + MAIN_CLASS + ".java");
         }
@@ -57,6 +74,12 @@ record Lesson(String id, Path dir, List<Path> sources, Path classesDir, Set<Stri
                     .collect(Collectors.toUnmodifiableSet());
         }
         return new Lesson(lessonId(dir), dir, sources, classesDir, classNames);
+    }
+
+    private static List<Path> javaFiles(Path dir) throws IOException {
+        try (Stream<Path> files = Files.list(dir)) {
+            return files.filter(p -> p.toString().endsWith(".java")).toList();
+        }
     }
 
     /** Path below the nearest enclosing "lessons" directory. */

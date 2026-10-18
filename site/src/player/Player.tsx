@@ -23,6 +23,9 @@ interface Props<T extends StepSource> {
   defaultLevel: DetailLevel;
   /** Whether this Lesson has JVM-level content worth switching to. */
   offersJvmDetail: boolean;
+  /** Called once the Learner reaches the last Step. */
+  onReachEnd?: () => void;
+  next?: { title: string; href: string };
 }
 
 /** Base delay between Steps at 1× speed. */
@@ -35,6 +38,8 @@ export default function Player<T extends StepSource>({
   renderer,
   defaultLevel,
   offersJvmDetail,
+  onReachEnd,
+  next,
 }: Props<T>) {
   const variantIds = Object.keys(variants);
   const [variantId, setVariantId] = useState(variantIds[0]!);
@@ -57,6 +62,11 @@ export default function Player<T extends StepSource>({
     const timer = setTimeout(() => dispatch({ type: "next" }), STEP_MS / state.speed);
     return () => clearTimeout(timer);
   }, [state.playing, state.index, state.speed, dispatch]);
+
+  const atEnd = state.index === config.stepCount - 1;
+  useEffect(() => {
+    if (atEnd) onReachEnd?.();
+  }, [atEnd, onReachEnd]);
 
   useEffect(() => {
     if (state.prompt?.phase === "asking") firstChoiceRef.current?.focus();
@@ -165,8 +175,13 @@ export default function Player<T extends StepSource>({
                 />
               ) : (
                 <>
-                  {narration && <p className="narration-text">{narration.text}</p>}
+                  {narration && <Prose text={narration.text} className="narration-text" />}
                   {waitingPrompt && <p className="narration-hint">Step forward to answer a question about what happens next.</p>}
+                  {atEnd && next && (
+                    <p className="narration-next">
+                      Next lesson: <a href={next.href}>{next.title}</a>
+                    </p>
+                  )}
                 </>
               )}
             </section>
@@ -258,7 +273,7 @@ function PromptPanel({
   const correct = revealed && state.choice === prompt.answer;
   return (
     <div className="prompt">
-      <p className="prompt-question">{prompt.question}</p>
+      <Prose text={prompt.question} className="prompt-question" />
       <ul className="prompt-choices">
         {prompt.choices.map((choice, i) => {
           const verdict = !revealed ? undefined : i === prompt.answer ? "right" : i === state.choice ? "wrong" : undefined;
@@ -273,7 +288,7 @@ function PromptPanel({
                 disabled={revealed}
                 onClick={() => onChoose(i)}
               >
-                {choice}
+                <Inline text={choice} />
                 {verdict === "right" && <span className="sr-only"> (correct answer)</span>}
                 {verdict === "wrong" && <span className="sr-only"> (your answer)</span>}
               </button>
@@ -284,7 +299,7 @@ function PromptPanel({
       {revealed && (
         <div className="prompt-result" role="status">
           <p>
-            <strong>{correct ? "Right." : "Not quite."}</strong> {prompt.explanation}
+            <strong>{correct ? "Right." : "Not quite."}</strong> <Inline text={prompt.explanation} />
           </p>
           <button type="button" className="button-primary" ref={continueRef} onClick={onContinue}>
             Show what happens
@@ -292,6 +307,27 @@ function PromptPanel({
         </div>
       )}
     </div>
+  );
+}
+
+/** Narration prose: blank-line-separated paragraphs, with `backticks` as code. */
+function Prose({ text, className }: { text: string; className: string }) {
+  return (
+    <>
+      {text.split("\n\n").map((paragraph, i) => (
+        <p key={i} className={className}>
+          <Inline text={paragraph} />
+        </p>
+      ))}
+    </>
+  );
+}
+
+function Inline({ text }: { text: string }) {
+  return (
+    <>
+      {text.split(/`([^`]+)`/).map((part, i) => (i % 2 ? <code key={i}>{part}</code> : part))}
+    </>
   );
 }
 

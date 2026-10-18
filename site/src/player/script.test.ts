@@ -1,14 +1,18 @@
+import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import type { Trace } from "@java-visuals/trace-schema";
 import fixture from "@java-visuals/trace-schema/fixtures/method-calls.json";
-import script from "../../../lessons/memory/method-calls/script.json";
+import { parseNarration } from "../content/narration";
 import { narrationAt, promptsByStep, unresolvedAnchors, variantSwitchTarget, type LessonScript } from "./script";
 
 const trace = fixture as unknown as Trace;
-const lesson = script as LessonScript;
+const lesson: LessonScript = {
+  title: "Method calls and Frames",
+  ...parseNarration(readFileSync(new URL("../../../lessons/memory/method-calls/narration.md", import.meta.url), "utf8")),
+};
 
 describe("lesson script", () => {
-  it("every anchor in the method-calls script resolves", () => {
+  it("every anchor in the method-calls narration resolves", () => {
     expect(unresolvedAnchors(lesson, trace)).toEqual([]);
   });
 

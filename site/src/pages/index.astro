@@ -1,35 +1,70 @@
 ---
 import Base from "../layouts/Base.astro";
+import LessonList from "../components/curriculum/LessonList.tsx";
+import { toListItems } from "../components/curriculum/items";
+import { loadCurriculum } from "../content/curriculum";
+import { trackHref } from "../links";
+
+const { tracks, lessons } = await loadCurriculum();
 ---
 
 <Base title="Java Visuals">
   <main class="home">
     <h1>Java Visuals</h1>
-    <p>Learn Java by watching it run: every Frame pushed, every object allocated, every Reference drawn.</p>
-    <h2>Memory</h2>
-    <ul>
-      <li><a href="/lessons/memory/method-calls">Method calls and Frames</a></li>
-    </ul>
+    <p class="lede">
+      Learn Java by watching it run: every Frame pushed onto the Stack, every object placed on the Heap, every Reference
+      drawn.
+    </p>
+    <ol class="tracks">
+      {
+        tracks.map((track) => (
+          <li class="track">
+            <h2>
+              <a href={trackHref(track.id)}>{track.data.title}</a>
+            </h2>
+            <p>{track.data.description}</p>
+            {track.lessons.length > 0 && <LessonList client:load compact lessons={toListItems(track.lessons, lessons)} />}
+          </li>
+        ))
+      }
+    </ol>
   </main>
 </Base>
 
 <style>
   .home {
-    max-width: 44rem;
+    max-width: 48rem;
     margin: 0 auto;
-    padding: 3rem 1rem;
+    padding: 3rem 1rem 4rem;
   }
   h1 {
-    font-size: 2.5rem;
+    font-size: 2.75rem;
     line-height: 1.1;
     margin: 0 0 0.75rem;
+    letter-spacing: -0.015em;
   }
-  p {
-    font-size: 1.1875rem;
+  .lede {
+    font-size: 1.25rem;
+    max-width: 58ch;
+    margin: 0 0 2.5rem;
+  }
+  .tracks {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: 2rem;
+  }
+  .track {
+    border-top: 3px solid var(--stack);
+    padding-top: 1rem;
+  }
+  .track h2 {
+    margin: 0;
+    font-size: 1.5rem;
+  }
+  .track p {
+    margin: 0.375rem 0 1rem;
     max-width: 60ch;
-  }
-  h2 {
-    font-size: 1.125rem;
-    margin-top: 2.5rem;
   }
 </style>

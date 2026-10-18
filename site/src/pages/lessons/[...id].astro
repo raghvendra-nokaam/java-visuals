@@ -1,0 +1,64 @@
+---
+import Base from "../../layouts/Base.astro";
+import ExecutionLesson from "../../components/lessons/ExecutionLesson.tsx";
+import { loadCurriculum, trackOf, type LessonEntry } from "../../content/curriculum";
+import { loadExecutionLesson } from "../../content/executionLesson";
+import { href, trackHref } from "../../links";
+
+export async function getStaticPaths() {
+  const { tracks, lessons } = await loadCurriculum();
+  return [...lessons.values()].map((lesson) => {
+    if (lesson.data.kind !== "execution") {
+      throw new Error(`${lesson.id}: ${lesson.data.kind} Lessons aren't supported yet (build plan, Phases 6–7)`);
+    }
+    const track = tracks.find((t) => t.id === trackOf(lesson.id))!;
+    const position = track.lessons.indexOf(lesson);
+    return {
+      params: { id: lesson.id },
+      props: { lesson, track: { id: track.id, title: track.data.title }, next: track.lessons[position + 1] },
+    };
+  });
+}
+
+interface Props {
+  lesson: LessonEntry;
+  track: { id: string; title: string };
+  next: LessonEntry | undefined;
+}
+const { lesson, track, next } = Astro.props;
+const data = loadExecutionLesson(lesson);
+---
+
+<Base title={`${lesson.data.title} | Java Visuals`} description={lesson.data.summary}>
+  <nav class="crumbs" aria-label="Breadcrumb">
+    <a href={href("/")}>Java Visuals</a>
+    <span aria-hidden="true">/</span>
+    <a href={trackHref(track.id)}>{track.title}</a>
+  </nav>
+  <ExecutionLesson
+    client:load
+    lessonId={lesson.id}
+    variants={data.variants}
+    variantLabels={data.variantLabels}
+    script={data.script}
+    defaultLevel={lesson.data.detail}
+    next={next ? { title: next.data.title, href: `${href(`lessons/${next.id}/`)}` } : undefined}
+  />
+</Base>
+
+<style>
+  .crumbs {
+    max-width: 90rem;
+    margin: 0 auto;
+    padding: 1rem 1.5rem 0;
+    display: flex;
+    gap: 0.5rem;
+    font-size: 0.9375rem;
+    color: var(--ink-soft);
+  }
+  @media (max-width: 40rem) {
+    .crumbs {
+      padding: 0.75rem 1rem 0;
+    }
+  }
+</style>

@@ -129,7 +129,7 @@
           "$ref": "#/$defs/SubStep"
         },
         "activeThread": {
-          "description": "Id of the thread whose location this Step is. Usually running; blocked when the Step shows it stuck waiting for a lock.",
+          "description": "Id of the thread whose location this Step is. Usually running; blocked or waiting on the Step that shows it stuck waiting for a lock or inside wait().",
           "$ref": "#/$defs/Id"
         },
         "threads": {

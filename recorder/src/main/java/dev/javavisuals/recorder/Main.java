@@ -89,6 +89,9 @@ public final class Main {
             System.err.printf("recorder: %s [%s] → %d Steps, %d Markers%n",
                     lesson.id(), variant, trace.steps().size(), trace.markers().size());
         }
+        Markers.checkReached(
+                traces.entrySet().stream().collect(java.util.stream.Collectors.toMap(Map.Entry::getKey, e -> e.getValue().source())),
+                traces.entrySet().stream().collect(java.util.stream.Collectors.toMap(Map.Entry::getKey, e -> e.getValue().markers())));
         try (Stream<Path> existing = Files.list(tracesDir)) {
             for (Path stale : existing.filter(p -> !traces.containsKey(p.getFileName().toString().replace(".json", ""))).toList()) {
                 Files.delete(stale);

@@ -100,8 +100,8 @@ export function checkTrace(trace: Trace): string[] {
     if (!active) {
       errors.push(`${at}.activeThread: unknown thread "${step.activeThread}"`);
     } else {
-      if (active.state !== "running" && active.state !== "blocked") {
-        errors.push(`${at}: active thread must be "running" or "blocked", is "${active.state}"`);
+      if (active.state !== "running" && active.state !== "blocked" && active.state !== "waiting") {
+        errors.push(`${at}: active thread must be "running", "blocked" or "waiting", is "${active.state}"`);
       }
       const top = active.frames.at(-1);
       if (top && top.line !== step.location.line) {

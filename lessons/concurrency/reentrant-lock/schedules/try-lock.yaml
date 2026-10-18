@@ -1,0 +1,8 @@
+# The same moment, but B uses tryLock() and gives up instead of waiting.
+- run: main
+  until: join
+- run: A
+  until: update
+  steps: 1
+- run: B           # tryLock() fails at once, so B counts a miss and finishes
+- run: A

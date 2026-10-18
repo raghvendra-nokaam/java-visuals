@@ -79,7 +79,7 @@ Narration is the only text the Learner reads, so every sentence has to earn its 
 - **Write for someone who knows the syntax.** Explain what happens, not what the code says.
 - **Remember when a block appears.** A block at a Marker shows when the Learner reaches that Step, which is *before* that line runs, and stays until the next anchor. Describe what just happened and what's about to.
 - **One idea per block, in one to three sentences.** If you need more, you probably need another Marker.
-- **Use the glossary terms** from CONTEXT.md, and put code in `backticks`.
+- **Use the glossary terms** from CONTEXT.md, and put code in `backticks`. The exception is words about the project itself ("Learner", "Lesson Program", "Trace"): narration talks to the reader as "you" and about "the program".
 - **Use plain words.** Avoid "simply", "just", "obviously" and "of course". If it were obvious, there'd be no lesson.
 - **Be exact.** Say "eligible for garbage collection", not "deleted". Say "a copy of the Reference", not "the object is passed".
 

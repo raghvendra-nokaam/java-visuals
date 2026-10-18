@@ -266,6 +266,11 @@ final class StateCapture {
             return new HeapObject(id, type, "array", null, elements, null, state, isInternal, false, allocated,
                     monitor(obj, threads));
         }
+        if (isReentrantLock(obj)) {
+            // Its state lives in JDK internals; show it the way a synchronized lock is shown instead.
+            return new HeapObject(id, type, "object", List.of(), null, null, state, isInternal, false, allocated,
+                    reentrantLockMonitor(obj, threads));
+        }
         List<Variable> fields = obj instanceof ThreadReference t ? threadFields(t, refs)
                 : opaque(obj) ? List.of() : instanceFields(obj.referenceType()).stream()
                         .map(f -> new Variable(f.name(), f.typeName(), refs.value(obj.getValue(f))))
@@ -289,8 +294,10 @@ final class StateCapture {
             for (ThreadReference t : waiters) {
                 String tid = threadId(t);
                 if (!known.contains(tid)) return null;
-                (t.status() == ThreadReference.THREAD_STATUS_MONITOR ? blocked : waiting).add(tid);
+                if (t.status() != ThreadReference.THREAD_STATUS_MONITOR) waiting.add(tid);
+                else if (owner != null) blocked.add(tid); // with no owner it's about to get the lock, not blocked
             }
+            if (owner == null && blocked.isEmpty() && waiting.isEmpty()) return null;
             String ownerId = owner == null ? null : threadId(owner);
             if (ownerId != null && !known.contains(ownerId)) return null;
             return new Monitor(ownerId, obj.entryCount(), blocked, waiting);
@@ -315,6 +322,65 @@ final class StateCapture {
         return task == null ? List.of() : List.of(new Variable("task", "java.lang.Runnable", refs.value(task)));
     }
 
+    // ---- java.util.concurrent locks (JDK 25 layout; a different layout just shows no lock state) ----
+
+    private static final String REENTRANT_LOCK = "java.util.concurrent.locks.ReentrantLock";
+    private static final String AQS = "java.util.concurrent.locks.AbstractQueuedSynchronizer";
+
+    static boolean isReentrantLock(ObjectReference obj) {
+        return obj.referenceType().name().equals(REENTRANT_LOCK);
+    }
+
+    private static com.sun.jdi.Value field(ObjectReference obj, String name) {
+        if (obj == null) return null;
+        Field f = obj.referenceType().fieldByName(name);
+        return f == null ? null : obj.getValue(f);
+    }
+
+    /** Owner, hold count and queued threads of a ReentrantLock, read from its AQS state. */
+    private Monitor reentrantLockMonitor(ObjectReference lock, List<ThreadState> threads) {
+        if (!(field(lock, "sync") instanceof ObjectReference sync)) return null;
+        Set<String> known = new HashSet<>();
+        threads.forEach(t -> known.add(t.id()));
+        String owner = field(sync, "exclusiveOwnerThread") instanceof ThreadReference t ? threadId(t) : null;
+        int holds = field(sync, "state") instanceof com.sun.jdi.IntegerValue v ? v.value() : 0;
+        List<String> queued = new ArrayList<>();
+        // The queue runs head → tail; walk back from the tail, which is always linked, then reverse.
+        for (var node = field(sync, "tail"); node instanceof ObjectReference n; node = field(n, "prev")) {
+            if (field(n, "waiter") instanceof ThreadReference w && known.contains(threadId(w))) queued.add(threadId(w));
+            if (queued.size() > MAX_HEAP_OBJECTS) break;
+        }
+        java.util.Collections.reverse(queued);
+        if (owner != null && !known.contains(owner)) owner = null;
+        if (owner == null && queued.isEmpty()) return null;
+        return new Monitor(owner, holds, queued, List.of());
+    }
+
+    /**
+     * The thread that owns the ReentrantLock (or other AQS lock) {@code thread} is queued for, or null. A thread
+     * waiting for such a lock is parked, not blocked on a monitor, so it has to be recognised from its frames.
+     */
+    static ThreadReference aqsLockOwner(ThreadReference thread) throws IncompatibleThreadStateException {
+        if (thread.status() != ThreadReference.THREAD_STATUS_WAIT) return null;
+        for (StackFrame frame : thread.frames()) {
+            var method = frame.location().method();
+            if (method.declaringType().name().equals(AQS) && method.name().equals("acquire")) {
+                return field(frame.thisObject(), "exclusiveOwnerThread") instanceof ThreadReference owner
+                        && !owner.equals(thread) ? owner : null;
+            }
+        }
+        return null;
+    }
+
+    /** True when the thread is inside {@code Object.wait()} called directly from Lesson Program code. */
+    boolean isWaitingInLessonCode(ThreadReference thread) throws IncompatibleThreadStateException {
+        for (StackFrame frame : thread.frames()) {
+            if (frame.location().declaringType().name().equals("java.lang.Object")) continue;
+            return isLessonFrame(frame);
+        }
+        return false;
+    }
+
     /** Instance fields, superclass fields first, each class in declaration order. */
     private static List<Field> instanceFields(ReferenceType type) {
         Deque<ReferenceType> chain = new ArrayDeque<>();
@@ -334,9 +400,24 @@ final class StateCapture {
                 || obj instanceof ModuleReference;
     }
 
+    /** Blocked on a lock nobody holds any more: it will get it as soon as it runs, so it's really just ready. */
+    private static boolean lockIsFree(ThreadReference thread) {
+        try {
+            ObjectReference monitor = thread.currentContendedMonitor();
+            return monitor != null && monitor.owningThread() == null;
+        } catch (IncompatibleThreadStateException | UnsupportedOperationException e) {
+            return false;
+        }
+    }
+
     private static String status(ThreadReference thread) {
+        try {
+            if (aqsLockOwner(thread) != null) return "blocked";
+        } catch (IncompatibleThreadStateException e) {
+            // not suspended: fall back to the plain status
+        }
         return switch (thread.status()) {
-            case ThreadReference.THREAD_STATUS_MONITOR -> "blocked";
+            case ThreadReference.THREAD_STATUS_MONITOR -> lockIsFree(thread) ? "runnable" : "blocked";
             case ThreadReference.THREAD_STATUS_WAIT, ThreadReference.THREAD_STATUS_SLEEPING -> "waiting";
             case ThreadReference.THREAD_STATUS_ZOMBIE -> "terminated";
             default -> "runnable";
@@ -422,7 +503,8 @@ final class StateCapture {
                     if (task != null) value(task, true);
                     continue;
                 }
-                if (obj instanceof StringReference || BOXED.contains(obj.referenceType().name()) || opaque(obj)) {
+                if (obj instanceof StringReference || BOXED.contains(obj.referenceType().name()) || opaque(obj)
+                        || isReentrantLock(obj)) {
                     continue;
                 }
                 String id = objectIds.get(obj.uniqueID());

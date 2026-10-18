@@ -92,8 +92,9 @@ final class Recorder {
     private final Set<ThreadReference> done = new HashSet<>();
     /** Parked at their first line, which hasn't been captured yet. */
     private final Set<ThreadReference> needsFirstStep = new HashSet<>();
-    /** Blocked threads whose blocked Step we've already captured. */
+    /** Threads whose current blocked or waiting episode already has its Step; cleared when they run again. */
     private final Set<ThreadReference> reportedBlocked = new HashSet<>();
+    private final Set<ThreadReference> reportedWaiting = new HashSet<>();
     /** Waiting threads we tried since the last Step; not tried again until something changes. */
     private final Set<ThreadReference> triedWaiting = new HashSet<>();
     private final Map<ThreadReference, StepRequest> stepRequests = new HashMap<>();
@@ -146,9 +147,8 @@ final class Recorder {
         scheduler.checkFinished();
 
         List<Step> grouped = groupSubSteps(steps);
-        boolean deadlocked = !grouped.isEmpty() && grouped.getLast().events().stream().anyMatch(e -> e.type().equals("deadlock"));
         return new Trace(Trace.SCHEMA_VERSION, lesson.id(), variantId, scheduleId, source,
-                Markers.resolve(source, grouped, deadlocked), grouped);
+                Markers.resolve(source, grouped), grouped);
     }
 
     private VirtualMachine launch() throws Exception {
@@ -333,6 +333,8 @@ final class Recorder {
 
     /** The thread holding the lock {@code thread} is blocked on, or null if it isn't blocked (or the lock is free). */
     private ThreadReference lockHolder(ThreadReference thread) throws IncompatibleThreadStateException {
+        ThreadReference aqsOwner = StateCapture.aqsLockOwner(thread);
+        if (aqsOwner != null) return aqsOwner;
         if (thread.status() != ThreadReference.THREAD_STATUS_MONITOR || !vm.canGetCurrentContendedMonitor()) return null;
         ObjectReference monitor = thread.currentContendedMonitor();
         return monitor == null ? null : monitor.owningThread();
@@ -360,17 +362,22 @@ final class Recorder {
         ThreadReference thread = current;
         thread.suspend();
         try {
-            switch (thread.status()) {
-                case ThreadReference.THREAD_STATUS_MONITOR -> {
-                    ThreadReference holder = lockHolder(thread);
-                    if (holder == null) return; // the lock was just freed; it will get it
-                    if (reportedBlocked.add(thread)) {
-                        captureStep(thread, StateCapture.blockedLocation(firstLessonFrame(thread).location()), "blocked", null);
-                    }
-                    scheduler.onBlocked(thread.name(), holder.name());
-                    switchRequested = true;
+            ThreadReference holder = lockHolder(thread);
+            int status = thread.status();
+            if (holder != null || status == ThreadReference.THREAD_STATUS_MONITOR) {
+                // Blocked on a synchronized lock, or queued for a ReentrantLock: the same thing to the Learner.
+                if (holder == null) return; // the lock was just freed; it will get it
+                if (reportedBlocked.add(thread)) {
+                    captureStep(thread, StateCapture.blockedLocation(firstLessonFrame(thread).location()), "blocked", null);
                 }
+                scheduler.onBlocked(thread.name(), holder.name());
+                switchRequested = true;
+            } else switch (status) {
                 case ThreadReference.THREAD_STATUS_WAIT, ThreadReference.THREAD_STATUS_SLEEPING -> {
+                    // wait() in Lesson code is part of the lesson; join() and friends happen inside the JDK.
+                    if (capture.isWaitingInLessonCode(thread) && reportedWaiting.add(thread)) {
+                        captureStep(thread, firstLessonFrame(thread).location(), "waiting", null);
+                    }
                     triedWaiting.add(thread);
                     scheduler.onWaiting(thread.name());
                     switchRequested = true;
@@ -494,6 +501,8 @@ final class Recorder {
         } else {
             setStepSize(thread, StepRequest.STEP_LINE);
         }
+        reportedBlocked.remove(thread);
+        reportedWaiting.remove(thread);
         captureStep(thread, location, "running", label);
         afterCapture(thread, location, label);
     }
@@ -530,6 +539,7 @@ final class Recorder {
     private void captureStep(ThreadReference thread, com.sun.jdi.Location location, String state, String subStepLabel)
             throws Exception {
         settle();
+        noticeNotifiedWaiters(thread);
         if (steps.size() >= MAX_STEPS) {
             throw new IllegalStateException("Trace passed " + MAX_STEPS + " Steps; keep Lesson Programs small");
         }
@@ -559,6 +569,42 @@ final class Recorder {
         pending.clear();
         pendingReturnRefs.clear();
         triedWaiting.clear();
+    }
+
+    /** How long a parked waiter gets to show it was notified (it then tries to re-take its lock). */
+    private static final long NOTIFY_PROBE_MS = 300;
+
+    /**
+     * A thread parked inside {@code wait()} looks the same to JDI whether or not it has been notified. Let it run
+     * briefly: if it was notified it immediately tries to re-take its lock and shows as blocked; if not, it keeps
+     * waiting. Only done while another (suspended) thread holds that lock, so it can't get back into Lesson code.
+     */
+    private void noticeNotifiedWaiters(ThreadReference active) throws Exception {
+        if (!vm.canGetMonitorInfo()) return;
+        for (ThreadReference thread : lessonThreads) {
+            if (thread.equals(active) || done.contains(thread) || !parked.contains(thread)) continue;
+            if (thread.status() != ThreadReference.THREAD_STATUS_WAIT || !capture.isWaitingInLessonCode(thread)) continue;
+            ObjectReference monitor = waitTarget(thread);
+            ThreadReference owner = monitor == null ? null : monitor.owningThread();
+            if (owner == null || owner.equals(thread)) continue;
+            thread.resume();
+            long until = System.currentTimeMillis() + NOTIFY_PROBE_MS;
+            while (thread.status() == ThreadReference.THREAD_STATUS_WAIT && System.currentTimeMillis() < until) {
+                Thread.sleep(5);
+            }
+            thread.suspend();
+        }
+    }
+
+    /** The object a thread is inside {@code wait()} on: the receiver of the {@code Object.wait} frame. */
+    private static ObjectReference waitTarget(ThreadReference thread) throws IncompatibleThreadStateException {
+        for (StackFrame frame : thread.frames()) {
+            var method = frame.location().method();
+            if (method.declaringType().name().equals("java.lang.Object") && !method.isNative() && !method.isStatic()) {
+                return frame.thisObject();
+            }
+        }
+        return null;
     }
 
     /**

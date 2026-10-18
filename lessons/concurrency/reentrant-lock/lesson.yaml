@@ -1,0 +1,14 @@
+title: ReentrantLock
+kind: execution
+order: 3
+summary: A lock you take and release yourself. See who holds it, who's queued for it, why the same thread can take it twice, and how tryLock() gives up instead of waiting.
+prerequisites:
+  - concurrency/lost-update
+detail: simple
+variants:
+  - id: default
+    label: lock()
+    schedule: contended
+  - id: try-lock
+    label: tryLock()
+    schedule: try-lock

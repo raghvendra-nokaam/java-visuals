@@ -20,32 +20,52 @@ final class Markers {
 
     private Markers() {}
 
+    /**
+     * Resolves the Markers this run reached. A Variant may take a path that never reaches some Markers (a thread
+     * that never has to wait, a deadlock that stops the program); those are left out. {@link #checkReached}
+     * then fails the recording if a Marker is reached by no Variant at all, which is almost always a typo.
+     */
     static Map<String, Integer> resolve(List<SourceFile> sources, List<Step> steps) {
-        return resolve(sources, steps, false);
+        Map<String, Integer> markers = new LinkedHashMap<>();
+        for (Declared marker : declared(sources)) {
+            if (markers.containsKey(marker.key())) {
+                throw new IllegalStateException("Marker \"" + marker.key() + "\" is declared twice");
+            }
+            Integer step = find(steps, marker);
+            if (step != null) markers.put(marker.key(), step);
+        }
+        return markers;
     }
 
-    /**
-     * @param programNeverFinished the run ended in a deadlock, so Markers on lines it never reached are simply
-     *                             left out instead of failing the recording
-     */
-    static Map<String, Integer> resolve(List<SourceFile> sources, List<Step> steps, boolean programNeverFinished) {
-        Map<String, Integer> markers = new LinkedHashMap<>();
+    /** Fails if a Marker declared in any Variant's sources was reached by none of them. */
+    static void checkReached(Map<String, List<SourceFile>> sourcesByVariant, Map<String, Map<String, Integer>> markersByVariant) {
+        java.util.Set<String> reached = new java.util.HashSet<>();
+        markersByVariant.values().forEach(m -> reached.addAll(m.keySet()));
+        for (var entry : sourcesByVariant.entrySet()) {
+            for (Declared marker : declared(entry.getValue())) {
+                if (!reached.contains(marker.key())) {
+                    throw new IllegalStateException("Marker \"" + marker.key() + "\" (" + marker.file() + ":" + marker.line()
+                            + ") matches no Step in any Variant");
+                }
+            }
+        }
+    }
+
+    record Declared(String key, String file, int line, String thread, int hit) {}
+
+    static List<Declared> declared(List<SourceFile> sources) {
+        List<Declared> declared = new java.util.ArrayList<>();
         for (SourceFile file : sources) {
             for (int i = 0; i < file.lines().size(); i++) {
                 Matcher m = MARK.matcher(file.lines().get(i));
                 while (m.find()) {
-                    String thread = m.group(2);
-                    int hit = m.group(3) == null ? 1 : Integer.parseInt(m.group(3));
                     String key = m.group(0).replaceFirst("//\\s*@mark\\s+", "");
-                    if (markers.containsKey(key)) {
-                        throw new IllegalStateException("Marker \"" + key + "\" is declared twice");
-                    }
-                    Integer step = find(steps, file.path(), i + 1, thread, hit, key, programNeverFinished);
-                    if (step != null) markers.put(key, step);
+                    int hit = m.group(3) == null ? 1 : Integer.parseInt(m.group(3));
+                    declared.add(new Declared(key, file.path(), i + 1, m.group(2), hit));
                 }
             }
         }
-        return markers;
+        return declared;
     }
 
     /** "file:line" → the (unqualified) Marker names on that line; used to tell when a Schedule's turn is over. */
@@ -60,16 +80,14 @@ final class Markers {
         return byLine;
     }
 
-    private static Integer find(List<Step> steps, String file, int line, String thread, int hit, String key,
-            boolean mayBeUnreached) {
+    private static Integer find(List<Step> steps, Declared marker) {
         int seen = 0;
         for (int i = 0; i < steps.size(); i++) {
             Step s = steps.get(i);
-            boolean here = s.location().file().equals(file) && s.location().line() == line
+            boolean here = s.location().file().equals(marker.file()) && s.location().line() == marker.line()
                     && (s.subStep() == null || s.subStep().index() == 0);
-            if (here && (thread == null || thread.equals(s.activeThread())) && ++seen == hit) return i;
+            if (here && (marker.thread() == null || marker.thread().equals(s.activeThread())) && ++seen == marker.hit()) return i;
         }
-        if (mayBeUnreached) return null;
-        throw new IllegalStateException("Marker \"" + key + "\" (" + file + ":" + line + ") matches no Step");
+        return null;
     }
 }

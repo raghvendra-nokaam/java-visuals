@@ -180,7 +180,7 @@ export interface Step {
   location: Location;
   subStep?: SubStep;
   /**
-   * Id of the thread whose location this Step is. Usually running; blocked when the Step shows it stuck waiting for a lock.
+   * Id of the thread whose location this Step is. Usually running; blocked or waiting on the Step that shows it stuck waiting for a lock or inside wait().
    */
   activeThread: string;
   /**

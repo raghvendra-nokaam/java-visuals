@@ -1,0 +1,10 @@
+# A holds the lock (twice) and has read count when B arrives.
+- run: main
+  until: join
+- run: A
+  until: update
+  steps: 1
+- run: B
+  until: blocked   # lock() makes B wait in the lock's queue
+- run: A           # A finishes and unlocks, which lets B in
+- run: B

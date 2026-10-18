@@ -31,9 +31,9 @@ export function slot(value: Value, step: Step, level: DetailLevel): Slot {
   }
 }
 
-/** Short name for a type: drops the java.lang. / java.util. package prefix. */
+/** Short name for a type: JDK types lose their package (java.util.concurrent.locks.ReentrantLock → ReentrantLock). */
 export function shortType(type: string): string {
-  return type.replace(/^java\.(lang|util)\./, "");
+  return /^javax?\./.test(type) ? type.slice(type.lastIndexOf(".") + 1) : type;
 }
 
 /** How a Frame is titled: constructors read as `new Point`, everything else as the method name. */

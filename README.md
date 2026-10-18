@@ -11,7 +11,7 @@ It's for people who already know some Java syntax and want to understand what ha
 | **History** | The Sun years (1996 to 2006) · Java 5: new syntax, same JVM · Oracle, lambdas and modules · A release every six months (JDK 10 to 27) |
 | **The JVM** | How Java runs your code: javac, class loading, verification, the interpreter's operand stack, and the JIT |
 | **Memory** | Method calls and Frames · Objects and References · Pass-by-value · When objects become eligible |
-| **Concurrency** | One Heap, many Stacks · The lost update · Deadlock |
+| **Concurrency** | One Heap, many Stacks · The lost update · ReentrantLock · Waiting for a message · Deadlock |
 
 Every lesson plays in the same Player: play, pause, step, scrub, change speed, use the keyboard (← → Space Home End), and answer **Predict Prompts** that pause the animation and ask what happens next. Memory lessons can switch between a **Simple** view and a **JVM detail** view that reveals JDK internals, and some lessons have **Variants** you can switch between at the same moment, such as reassigning a parameter vs. changing the object it points to.
 

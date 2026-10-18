@@ -1,6 +1,6 @@
 title: Deadlock
 kind: execution
-order: 3
+order: 5
 summary: Two transfers lock the same two accounts in opposite orders and end up waiting for each other forever. Then one rule makes it impossible.
 prerequisites:
   - concurrency/lost-update

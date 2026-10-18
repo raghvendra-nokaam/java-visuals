@@ -93,7 +93,9 @@ A Lesson Program that starts threads runs them one at a time, in a deterministic
 
 `run` names a thread by its Java name (`new Thread(task, "A")`). After the last turn, any threads still unfinished run one at a time in start order. A Schedule that names a thread that hasn't started, expects a Marker a thread never reaches, or leaves turns unused fails the recording and names the turn. If every remaining thread is blocked on another's lock, the recording ends in a deadlock, which is a valid ending for a lesson about deadlocks.
 
-Use `synchronized` blocks rather than `synchronized` methods in Lesson Programs, so a blocked thread is shown at a line of your code.
+Use `synchronized` blocks rather than `synchronized` methods in Lesson Programs, so a blocked thread is shown at a line of your code. `ReentrantLock` works too, and is shown like a `synchronized` lock. A thread calling `wait()` gets its own Step (shown as waiting), and its turn can end with `until: waiting`.
+
+Variants often take different paths through shared files: a thread that never has to wait, a program that deadlocks. A Marker only has to be reached by one Variant, and narration anchored to it must then be scoped (`in <variant>`) to the Variants that reach it. The build tells you which anchor doesn't resolve where.
 
 ## Sub-steps
 

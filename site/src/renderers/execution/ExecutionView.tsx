@@ -334,6 +334,7 @@ function MonitorBadges({ monitor, step }: { monitor: NonNullable<HeapObject["mon
       {monitor.owner && (
         <span className="monitor-owner">
           Locked by <strong>{threadName(step, monitor.owner)}</strong>
+          {monitor.entryCount > 1 && ` (held ${monitor.entryCount === 2 ? "twice" : `${monitor.entryCount} times`})`}
         </span>
       )}
       {monitor.blocked.length > 0 && (

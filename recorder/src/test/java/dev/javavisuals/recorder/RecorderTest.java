@@ -191,6 +191,65 @@ class RecorderTest {
         assertTrue(error.getMessage().contains("turn 2") && error.getMessage().contains("no thread named \"Z\""), error.getMessage());
     }
 
+    @Test
+    void aThreadQueuedForAReentrantLockIsShownBlockedWithTheHolderAndHoldCount() throws Exception {
+        Path dir = REPO.resolve("lessons/concurrency/reentrant-lock");
+        Trace trace = Recorder.record(Lesson.compile(dir), "default", Schedule.read(dir, "contended"));
+        Step blocked = trace.steps().stream().filter(s -> s.threads().stream()
+                .anyMatch(t -> t.id().equals(s.activeThread()) && t.state().equals("blocked"))).findFirst().orElseThrow();
+        assertEquals("B", blocked.activeThread());
+        HeapObject lock = objectsOfTypeIn(blocked, "java.util.concurrent.locks.ReentrantLock").getFirst();
+        assertEquals(List.of(), lock.fields(), "JDK internals stay hidden");
+        assertEquals("A", lock.monitor().owner());
+        assertEquals(2, lock.monitor().entryCount(), "increment() and add() each hold it");
+        assertEquals(List.of("B"), lock.monitor().blocked());
+        assertEquals("2 added, 0 gave up\n", trace.steps().getLast().console());
+
+        Trace tryLock = Recorder.record(Lesson.compile(dir, "try-lock"), "try-lock", Schedule.read(dir, "try-lock"));
+        assertEquals("1 added, 1 gave up\n", tryLock.steps().getLast().console());
+    }
+
+    @Test
+    void waitGetsAWaitingStepAndReleasesTheLock() throws Exception {
+        Path dir = REPO.resolve("lessons/concurrency/waiting-for-a-message");
+        Trace trace = Recorder.record(Lesson.compile(dir), "default", Schedule.read(dir, "reader-first"));
+        Step waiting = trace.steps().stream().filter(s -> s.threads().stream()
+                .anyMatch(t -> t.id().equals(s.activeThread()) && t.state().equals("waiting"))).findFirst().orElseThrow();
+        assertEquals("Reader", waiting.activeThread());
+        assertEquals(7, waiting.location().line());
+        HeapObject box = objectsOfTypeIn(waiting, "Mailbox").getFirst();
+        assertEquals(null, box.monitor().owner(), "wait() gave the lock up");
+        assertEquals(List.of("Reader"), box.monitor().waiting());
+        assertEquals("hello\n", trace.steps().getLast().console());
+
+        // notifyAll() moves Reader from waiting to wanting the lock; once Writer lets go it's simply ready.
+        List<String> readerStates = new java.util.ArrayList<>();
+        for (Step s : trace.steps()) {
+            String state = s.threads().stream().filter(t -> t.id().equals("Reader")).findFirst().map(t -> t.state()).orElse("-");
+            if (readerStates.isEmpty() || !readerStates.getLast().equals(state)) readerStates.add(state); // collapse repeats
+        }
+        assertTrue(String.join(" ", readerStates).contains("waiting blocked runnable running"), readerStates.toString());
+    }
+
+    @Test
+    void aMarkerNoVariantReachesFailsTheRecording() throws Exception {
+        Path dir = Path.of("build/unreached-marker/lessons/test/variants");
+        copyTree(Path.of("src/test/resources/lessons/test/variants"), dir);
+        Files.writeString(dir.resolve("Helper.java"), """
+                class Helper {
+                    static int twice(int n) {
+                        return n * 2;
+                    }
+
+                    static void neverCalled() {
+                        System.out.println(); // @mark nowhere
+                    }
+                }
+                """);
+        var error = org.junit.jupiter.api.Assertions.assertThrows(IllegalStateException.class, () -> Main.recordLesson(dir));
+        assertTrue(error.getMessage().contains("\"nowhere\"") && error.getMessage().contains("any Variant"), error.getMessage());
+    }
+
     private static List<HeapObject> objectsOfTypeIn(Step step, String type) {
         return step.heap().stream().filter(o -> o.type().equals(type)).toList();
     }

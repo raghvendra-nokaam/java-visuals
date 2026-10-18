@@ -54,17 +54,19 @@ If Trace files get too large, version 2 may switch to keyframes plus deltas. Les
 
 ## Markers
 
-`markers` maps Marker names (from `// @mark name` comments in the Lesson Program) to Step indices. An unqualified name resolves to the **first** Step whose `location` is that line. A qualified name (`name@thread#hit`) means "the *hit*-th time *thread* is at that line". Narration and Predict Prompts reference Markers, never raw Step indices. ✔ Every index exists. The recorder must fail the build if a Marker matches no Step.
+`markers` maps Marker names (from `// @mark name` comments in the Lesson Program) to Step indices. Markers this run never reached are left out, since Variants take different paths (a thread that never has to wait, a program that deadlocks). The recorder fails only if no Variant reaches a Marker, which catches typos. An unqualified name resolves to the **first** Step whose `location` is that line. A qualified name (`name@thread#hit`) means "the *hit*-th time *thread* is at that line". Narration and Predict Prompts reference Markers, never raw Step indices. ✔ Every index exists.
 
 ## Threads
 
 - `threads` lists every thread that has run Lesson Program code, in the order they started, `main` first. A thread that has left Lesson code for good stays in the list as `terminated` with an empty Stack.
-- `activeThread` is the thread this Step is about. It's normally `running`. It's `blocked` on the Step that shows it stuck waiting for a lock, and its top Frame is then at the `synchronized` line it's stuck on. ✔ The active thread is `running` or `blocked`.
+- `activeThread` is the thread this Step is about. It's normally `running`. It's `blocked` on the Step that shows it stuck waiting for a lock (its top Frame is then at the `synchronized` or `lock()` line), and `waiting` on the Step that shows it calling `wait()` in Lesson code. Waiting inside the JDK, as in `join()`, gets no Step of its own. ✔ The active thread is `running`, `blocked` or `waiting`.
 - Other threads are `runnable` (ready, waiting for their turn), `blocked` (waiting to acquire a lock), `waiting` (`join`, `wait`, `sleep`) or `terminated`.
 - A `java.lang.Thread` Object on the Heap shows the thread's name as its `display` and has one field, `task`: the Runnable it runs. That's the reference that keeps the Runnable alive.
-- A `monitor` appears on any Object whose lock is held or contended: `owner`, `blocked` threads wanting it, and `waiting` threads inside `wait()` on it. `join` waits on the Thread Object's monitor, so a joining thread shows up there.
+- A `monitor` appears on any Object whose lock is held or contended: `owner`, `entryCount` (how many times the owner holds it), `blocked` threads wanting it, and `waiting` threads inside `wait()` on it. `join` waits on the Thread Object's monitor, so a joining thread shows up there.
+- A thread parked inside `wait()` looks the same to the debugger whether or not it has been notified. While another thread holds the lock it waits on, the recorder lets it run briefly before each capture. If it was notified, it tries to re-take the lock and shows as `blocked`; otherwise it stays `waiting`. A thread `blocked` on a lock nobody holds any more is shown as `runnable`, since it will get the lock as soon as it runs.
+- A `java.util.concurrent.locks.ReentrantLock` is shown the same way. Its `monitor` is read from its internal AQS state (owner, hold count, queue), and it has no fields of its own. A thread queued in `lock()` is `blocked`, even though the JVM reports it as parked.
 - Exactly one thread runs between two Steps, chosen by the Schedule ([ADR 0002](adr/0002-author-defined-schedules-for-concurrency.md)). A thread appears in `threads` from its first Lesson line, never mid-startup.
-- If no thread can make progress because they're blocked on each other's locks, the last Step carries a `deadlock` event naming them and the Trace ends there. Markers on lines the program never reached are then left out of `markers` rather than failing the recording.
+- If no thread can make progress because they're blocked on each other's locks, the last Step carries a `deadlock` event naming them and the Trace ends there.
 
 ## Sub-steps
 

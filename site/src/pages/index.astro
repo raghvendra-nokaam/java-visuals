@@ -1,0 +1,21 @@
+---
+import type { Trace } from "@java-visuals/trace-schema";
+import fixture from "@java-visuals/trace-schema/fixtures/method-calls.json";
+import TraceSummary from "../components/TraceSummary.tsx";
+
+const trace = fixture as unknown as Trace;
+---
+
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+		<meta name="viewport" content="width=device-width" />
+		<title>Java Visuals</title>
+	</head>
+	<body>
+		<h1>Java Visuals</h1>
+		<p>Learn Java by watching it run.</p>
+		<TraceSummary trace={trace} />
+	</body>
+</html>

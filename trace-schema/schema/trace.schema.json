@@ -1,0 +1,764 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://javavisuals.dev/schema/trace/1.json",
+  "title": "Trace",
+  "description": "The recorded, ordered sequence of Steps produced by running one Variant of a Lesson Program on a real JVM. See docs/trace-format.md for semantics.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "lessonId",
+    "variantId",
+    "source",
+    "markers",
+    "steps"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": 1
+    },
+    "lessonId": {
+      "description": "Lesson path relative to lessons/, e.g. \"memory/method-calls\".",
+      "type": "string",
+      "pattern": "^[a-z0-9-]+(/[a-z0-9-]+)+$"
+    },
+    "variantId": {
+      "$ref": "#/$defs/Slug"
+    },
+    "scheduleId": {
+      "description": "The Schedule enforced while recording; absent for single-threaded Traces.",
+      "$ref": "#/$defs/Slug"
+    },
+    "source": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/SourceFile"
+      }
+    },
+    "markers": {
+      "description": "Marker name (optionally qualified, e.g. \"race-read@thread-2#1\") → index into steps.",
+      "type": "object",
+      "propertyNames": {
+        "$ref": "#/$defs/MarkerName"
+      },
+      "additionalProperties": {
+        "type": "integer",
+        "minimum": 0
+      }
+    },
+    "steps": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/Step"
+      }
+    }
+  },
+  "$defs": {
+    "Slug": {
+      "type": "string",
+      "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$"
+    },
+    "Id": {
+      "description": "Opaque identifier, stable across every Step of one Trace.",
+      "type": "string",
+      "minLength": 1
+    },
+    "MarkerName": {
+      "type": "string",
+      "pattern": "^[a-z0-9]+(-[a-z0-9]+)*(@[A-Za-z0-9_-]+)?(#[1-9][0-9]*)?$"
+    },
+    "SourceFile": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "path",
+        "lines"
+      ],
+      "properties": {
+        "path": {
+          "type": "string",
+          "minLength": 1
+        },
+        "lines": {
+          "description": "Source text split by line; lines[0] is line 1.",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "Location": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "file",
+        "line"
+      ],
+      "properties": {
+        "file": {
+          "type": "string"
+        },
+        "line": {
+          "type": "integer",
+          "minimum": 1
+        }
+      },
+      "description": "A source position. On HeapObject.allocatedAt: where Lesson Program code created the Object (drives code ↔ memory linked highlighting)."
+    },
+    "Step": {
+      "description": "One moment of execution: the line about to execute, plus the complete state before it executes.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "location",
+        "activeThread",
+        "threads",
+        "statics",
+        "heap",
+        "console",
+        "events"
+      ],
+      "properties": {
+        "location": {
+          "$ref": "#/$defs/Location"
+        },
+        "subStep": {
+          "$ref": "#/$defs/SubStep"
+        },
+        "activeThread": {
+          "description": "Id of the thread whose location this Step is.",
+          "$ref": "#/$defs/Id"
+        },
+        "threads": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/Thread"
+          }
+        },
+        "statics": {
+          "description": "Static fields of Lesson Program classes — GC roots alongside Frame locals.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/StaticFields"
+          }
+        },
+        "heap": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/HeapObject"
+          }
+        },
+        "console": {
+          "description": "Everything the program has written to stdout so far.",
+          "type": "string"
+        },
+        "events": {
+          "description": "What changed since the previous Step, in order. Lets renderers animate transitions without diffing.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Event"
+          }
+        }
+      }
+    },
+    "SubStep": {
+      "description": "Present when one source line is split into finer Steps (e.g. count++ as read → add → write).",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "index",
+        "count",
+        "label"
+      ],
+      "properties": {
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "count": {
+          "type": "integer",
+          "minimum": 2
+        },
+        "label": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "Thread": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "name",
+        "state",
+        "frames"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/Id"
+        },
+        "name": {
+          "type": "string"
+        },
+        "state": {
+          "enum": [
+            "running",
+            "runnable",
+            "blocked",
+            "waiting",
+            "terminated"
+          ]
+        },
+        "frames": {
+          "description": "The thread's Stack, outermost Frame first, current Frame last.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Frame"
+          }
+        }
+      }
+    },
+    "Frame": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "className",
+        "method",
+        "line",
+        "locals"
+      ],
+      "properties": {
+        "id": {
+          "description": "Unique per invocation: a recursive call gets a new id.",
+          "$ref": "#/$defs/Id"
+        },
+        "className": {
+          "type": "string"
+        },
+        "method": {
+          "description": "Method name as the JVM reports it; constructors are \"<init>\".",
+          "type": "string"
+        },
+        "line": {
+          "description": "The line this Frame is currently at (for non-top Frames: the call site).",
+          "type": "integer",
+          "minimum": 1
+        },
+        "locals": {
+          "description": "Locals in scope, in declaration order. A local not yet assigned is absent.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Variable"
+          }
+        }
+      }
+    },
+    "StaticFields": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "className",
+        "fields"
+      ],
+      "properties": {
+        "className": {
+          "type": "string"
+        },
+        "fields": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Variable"
+          }
+        }
+      }
+    },
+    "Variable": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "type",
+        "value"
+      ],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "type": {
+          "description": "Declared Java type, e.g. \"int\", \"Point\", \"java.lang.String\".",
+          "type": "string"
+        },
+        "value": {
+          "$ref": "#/$defs/Value"
+        }
+      }
+    },
+    "Value": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/PrimitiveValue"
+        },
+        {
+          "$ref": "#/$defs/NullValue"
+        },
+        {
+          "$ref": "#/$defs/RefValue"
+        }
+      ]
+    },
+    "PrimitiveValue": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "type",
+        "display"
+      ],
+      "properties": {
+        "kind": {
+          "const": "primitive"
+        },
+        "type": {
+          "enum": [
+            "boolean",
+            "byte",
+            "char",
+            "short",
+            "int",
+            "long",
+            "float",
+            "double"
+          ]
+        },
+        "display": {
+          "description": "Java source-literal rendering, e.g. \"5\", \"3.0\", \"'a'\", \"true\".",
+          "type": "string"
+        }
+      }
+    },
+    "NullValue": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind"
+      ],
+      "properties": {
+        "kind": {
+          "const": "null"
+        }
+      }
+    },
+    "RefValue": {
+      "description": "A Reference: points at a HeapObject in the same Step.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "id"
+      ],
+      "properties": {
+        "kind": {
+          "const": "ref"
+        },
+        "id": {
+          "$ref": "#/$defs/Id"
+        }
+      }
+    },
+    "HeapObject": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "type",
+        "shape",
+        "state",
+        "internal",
+        "inline"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/Id"
+        },
+        "type": {
+          "description": "Runtime type, e.g. \"Point\", \"int[]\", \"java.lang.String\".",
+          "type": "string"
+        },
+        "shape": {
+          "enum": [
+            "object",
+            "array"
+          ]
+        },
+        "fields": {
+          "description": "Instance fields (shape = object).",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Variable"
+          }
+        },
+        "elements": {
+          "description": "Array elements (shape = array).",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Value"
+          }
+        },
+        "display": {
+          "description": "Value-like rendering for inline Objects, e.g. \"\\\"hello\\\"\" or \"42\".",
+          "type": "string"
+        },
+        "state": {
+          "enum": [
+            "live",
+            "eligible",
+            "collected"
+          ]
+        },
+        "internal": {
+          "description": "JDK Internal: not created by Lesson Program code. Hidden unless the Lesson shows it at the JVM Detail Level.",
+          "type": "boolean"
+        },
+        "inline": {
+          "description": "At the Simple Detail Level, draw References to this Object as its display value instead of an arrow (Strings, boxed primitives).",
+          "type": "boolean"
+        },
+        "allocatedAt": {
+          "$ref": "#/$defs/Location"
+        },
+        "monitor": {
+          "$ref": "#/$defs/Monitor"
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "shape": {
+                "const": "object"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "fields"
+            ],
+            "properties": {
+              "elements": false
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "shape": {
+                "const": "array"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "elements"
+            ],
+            "properties": {
+              "fields": false
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "inline": {
+                "const": true
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "display"
+            ]
+          }
+        }
+      ]
+    },
+    "Monitor": {
+      "description": "The Object's lock. Present only while owned or contended.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "owner",
+        "entryCount",
+        "blocked",
+        "waiting"
+      ],
+      "properties": {
+        "owner": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/Id"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "entryCount": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "blocked": {
+          "description": "Threads blocked trying to acquire it.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Id"
+          }
+        },
+        "waiting": {
+          "description": "Threads in wait() on it.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Id"
+          }
+        }
+      }
+    },
+    "Event": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "thread",
+            "frameId"
+          ],
+          "properties": {
+            "type": {
+              "const": "call"
+            },
+            "thread": {
+              "$ref": "#/$defs/Id"
+            },
+            "frameId": {
+              "$ref": "#/$defs/Id"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "thread",
+            "frameId"
+          ],
+          "properties": {
+            "type": {
+              "const": "return"
+            },
+            "thread": {
+              "$ref": "#/$defs/Id"
+            },
+            "frameId": {
+              "$ref": "#/$defs/Id"
+            },
+            "value": {
+              "$ref": "#/$defs/Value"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "objectId"
+          ],
+          "properties": {
+            "type": {
+              "const": "allocate"
+            },
+            "objectId": {
+              "$ref": "#/$defs/Id"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "target",
+            "value"
+          ],
+          "properties": {
+            "type": {
+              "const": "assign"
+            },
+            "target": {
+              "$ref": "#/$defs/AssignTarget"
+            },
+            "value": {
+              "$ref": "#/$defs/Value"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "objectId"
+          ],
+          "properties": {
+            "type": {
+              "enum": [
+                "eligible",
+                "collected"
+              ]
+            },
+            "objectId": {
+              "$ref": "#/$defs/Id"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "thread",
+            "objectId"
+          ],
+          "properties": {
+            "type": {
+              "enum": [
+                "lock-acquire",
+                "lock-release",
+                "lock-block",
+                "wait",
+                "notify"
+              ]
+            },
+            "thread": {
+              "$ref": "#/$defs/Id"
+            },
+            "objectId": {
+              "$ref": "#/$defs/Id"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "thread"
+          ],
+          "properties": {
+            "type": {
+              "enum": [
+                "thread-start",
+                "thread-end"
+              ]
+            },
+            "thread": {
+              "$ref": "#/$defs/Id"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "text"
+          ],
+          "properties": {
+            "type": {
+              "const": "output"
+            },
+            "text": {
+              "type": "string"
+            }
+          }
+        }
+      ]
+    },
+    "AssignTarget": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "frameId",
+            "name"
+          ],
+          "properties": {
+            "frameId": {
+              "$ref": "#/$defs/Id"
+            },
+            "name": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "objectId",
+            "field"
+          ],
+          "properties": {
+            "objectId": {
+              "$ref": "#/$defs/Id"
+            },
+            "field": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "objectId",
+            "index"
+          ],
+          "properties": {
+            "objectId": {
+              "$ref": "#/$defs/Id"
+            },
+            "index": {
+              "type": "integer",
+              "minimum": 0
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "className",
+            "field"
+          ],
+          "properties": {
+            "className": {
+              "type": "string"
+            },
+            "field": {
+              "type": "string"
+            }
+          }
+        }
+      ]
+    }
+  }
+}

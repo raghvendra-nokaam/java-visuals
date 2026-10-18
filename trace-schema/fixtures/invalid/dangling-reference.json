@@ -1,0 +1,1395 @@
+{
+  "schemaVersion": 1,
+  "lessonId": "memory/method-calls",
+  "variantId": "default",
+  "source": [
+    {
+      "path": "Program.java",
+      "lines": [
+        "public class Program {",
+        "    public static void main(String[] args) {",
+        "        int x = 2;",
+        "        int y = 3;",
+        "        int sum = add(x, y);",
+        "        Point p = new Point(sum, 0);",
+        "        System.out.println(p);",
+        "        p = null; // @mark object-dropped",
+        "    }",
+        "",
+        "    static int add(int a, int b) {",
+        "        int result = a + b; // @mark add-compute",
+        "        return result;",
+        "    }",
+        "}",
+        "",
+        "record Point(int x, int y) {}"
+      ]
+    }
+  ],
+  "markers": {
+    "add-compute": 3,
+    "object-dropped": 11
+  },
+  "steps": [
+    {
+      "location": {
+        "file": "Program.java",
+        "line": 3
+      },
+      "activeThread": "main",
+      "threads": [
+        {
+          "id": "main",
+          "name": "main",
+          "state": "running",
+          "frames": [
+            {
+              "id": "f1",
+              "className": "Program",
+              "method": "main",
+              "line": 3,
+              "locals": [
+                {
+                  "name": "args",
+                  "type": "java.lang.String[]",
+                  "value": {
+                    "kind": "ref",
+                    "id": "o1"
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "statics": [],
+      "heap": [
+        {
+          "id": "o1",
+          "type": "java.lang.String[]",
+          "shape": "array",
+          "elements": [],
+          "state": "live",
+          "internal": true,
+          "inline": false
+        }
+      ],
+      "console": "",
+      "events": [
+        {
+          "type": "call",
+          "thread": "main",
+          "frameId": "f1"
+        }
+      ]
+    },
+    {
+      "location": {
+        "file": "Program.java",
+        "line": 4
+      },
+      "activeThread": "main",
+      "threads": [
+        {
+          "id": "main",
+          "name": "main",
+          "state": "running",
+          "frames": [
+            {
+              "id": "f1",
+              "className": "Program",
+              "method": "main",
+              "line": 4,
+              "locals": [
+                {
+                  "name": "args",
+                  "type": "java.lang.String[]",
+                  "value": {
+                    "kind": "ref",
+                    "id": "o1"
+                  }
+                },
+                {
+                  "name": "x",
+                  "type": "int",
+                  "value": {
+                    "kind": "primitive",
+                    "type": "int",
+                    "display": "2"
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "statics": [],
+      "heap": [
+        {
+          "id": "o1",
+          "type": "java.lang.String[]",
+          "shape": "array",
+          "elements": [],
+          "state": "live",
+          "internal": true,
+          "inline": false
+        }
+      ],
+      "console": "",
+      "events": [
+        {
+          "type": "assign",
+          "target": {
+            "frameId": "f1",
+            "name": "x"
+          },
+          "value": {
+            "kind": "primitive",
+            "type": "int",
+            "display": "2"
+          }
+        }
+      ]
+    },
+    {
+      "location": {
+        "file": "Program.java",
+        "line": 5
+      },
+      "activeThread": "main",
+      "threads": [
+        {
+          "id": "main",
+          "name": "main",
+          "state": "running",
+          "frames": [
+            {
+              "id": "f1",
+              "className": "Program",
+              "method": "main",
+              "line": 5,
+              "locals": [
+                {
+                  "name": "args",
+                  "type": "java.lang.String[]",
+                  "value": {
+                    "kind": "ref",
+                    "id": "o1"
+                  }
+                },
+                {
+                  "name": "x",
+                  "type": "int",
+                  "value": {
+                    "kind": "primitive",
+                    "type": "int",
+                    "display": "2"
+                  }
+                },
+                {
+                  "name": "y",
+                  "type": "int",
+                  "value": {
+                    "kind": "primitive",
+                    "type": "int",
+                    "display": "3"
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "statics": [],
+      "heap": [
+        {
+          "id": "o1",
+          "type": "java.lang.String[]",
+          "shape": "array",
+          "elements": [],
+          "state": "live",
+          "internal": true,
+          "inline": false
+        }
+      ],
+      "console": "",
+      "events": [
+        {
+          "type": "assign",
+          "target": {
+            "frameId": "f1",
+            "name": "y"
+          },
+          "value": {
+            "kind": "primitive",
+            "type": "int",
+            "display": "3"
+          }
+        }
+      ]
+    },
+    {
+      "location": {
+        "file": "Program.java",
+        "line": 12
+      },
+      "activeThread": "main",
+      "threads": [
+        {
+          "id": "main",
+          "name": "main",
+          "state": "running",
+          "frames": [
+            {
+              "id": "f1",
+              "className": "Program",
+              "method": "main",
+              "line": 5,
+              "locals": [
+                {
+                  "name": "args",
+                  "type": "java.lang.String[]",
+                  "value": {
+                    "kind": "ref",
+                    "id": "o1"
+                  }
+                },
+                {
+                  "name": "x",
+                  "type": "int",
+                  "value": {
+                    "kind": "primitive",
+                    "type": "int",
+                    "display": "2"
+                  }
+                },
+                {
+                  "name": "y",
+                  "type": "int",
+                  "value": {
+                    "kind": "primitive",
+                    "type": "int",
+                    "display": "3"
+                  }
+                }
+              ]
+            },
+            {
+              "id": "f2",
+              "className": "Program",
+              "method": "add",
+              "line": 12,
+              "locals": [
+                {
+                  "name": "a",
+                  "type": "int",
+                  "value": {
+                    "kind": "primitive",
+                    "type": "int",
+                    "display": "2"
+                  }
+                },
+                {
+                  "name": "b",
+                  "type": "int",
+                  "value": {
+                    "kind": "primitive",
+                    "type": "int",
+                    "display": "3"
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "statics": [],
+      "heap": [
+        {
+          "id": "o1",
+          "type": "java.lang.String[]",
+          "shape": "array",
+          "elements": [],
+          "state": "live",
+          "internal": true,
+          "inline": false
+        }
+      ],
+      "console": "",
+      "events": [
+        {
+          "type": "call",
+          "thread": "main",
+          "frameId": "f2"
+        }
+      ]
+    },
+    {
+      "location": {
+        "file": "Program.java",
+        "line": 13
+      },
+      "activeThread": "main",
+      "threads": [
+        {
+          "id": "main",
+          "name": "main",
+          "state": "running",
+          "frames": [
+            {
+              "id": "f1",
+              "className": "Program",
+              "method": "main",
+              "line": 5,
+              "locals": [
+                {
+                  "name": "args",
+                  "type": "java.lang.String[]",
+                  "value": {
+                    "kind": "ref",
+                    "id": "o1"
+                  }
+                },
+                {
+                  "name": "x",
+                  "type": "int",
+                  "value": {
+                    "kind": "primitive",
+                    "type": "int",
+                    "display": "2"
+                  }
+                },
+                {
+                  "name": "y",
+                  "type": "int",
+                  "value": {
+                    "kind": "primitive",
+                    "type": "int",
+                    "display": "3"
+                  }
+                }
+              ]
+            },
+            {
+              "id": "f2",
+              "className": "Program",
+              "method": "add",
+              "line": 13,
+              "locals": [
+                {
+                  "name": "a",
+                  "type": "int",
+                  "value": {
+                    "kind": "primitive",
+                    "type": "int",
+                    "display": "2"
+                  }
+                },
+                {
+                  "name": "b",
+                  "type": "int",
+                  "value": {
+                    "kind": "primitive",
+                    "type": "int",
+                    "display": "3"
+                  }
+                },
+                {
+                  "name": "result",
+                  "type": "int",
+                  "value": {
+                    "kind": "primitive",
+                    "type": "int",
+                    "display": "5"
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "statics": [],
+      "heap": [
+        {
+          "id": "o1",
+          "type": "java.lang.String[]",
+          "shape": "array",
+          "elements": [],
+          "state": "live",
+          "internal": true,
+          "inline": false
+        }
+      ],
+      "console": "",
+      "events": [
+        {
+          "type": "assign",
+          "target": {
+            "frameId": "f2",
+            "name": "result"
+          },
+          "value": {
+            "kind": "primitive",
+            "type": "int",
+            "display": "5"
+          }
+        }
+      ]
+    },
+    {
+      "location": {
+        "file": "Program.java",
+        "line": 5
+      },
+      "activeThread": "main",
+      "threads": [
+        {
+          "id": "main",
+          "name": "main",
+          "state": "running",
+          "frames": [
+            {
+              "id": "f1",
+              "className": "Program",
+              "method": "main",
+              "line": 5,
+              "locals": [
+                {
+                  "name": "args",
+                  "type": "java.lang.String[]",
+                  "value": {
+                    "kind": "ref",
+                    "id": "o1"
+                  }
+                },
+                {
+                  "name": "x",
+                  "type": "int",
+                  "value": {
+                    "kind": "primitive",
+                    "type": "int",
+                    "display": "2"
+                  }
+                },
+                {
+                  "name": "y",
+                  "type": "int",
+                  "value": {
+                    "kind": "primitive",
+                    "type": "int",
+                    "display": "3"
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "statics": [],
+      "heap": [
+        {
+          "id": "o1",
+          "type": "java.lang.String[]",
+          "shape": "array",
+          "elements": [],
+          "state": "live",
+          "internal": true,
+          "inline": false
+        }
+      ],
+      "console": "",
+      "events": [
+        {
+          "type": "return",
+          "thread": "main",
+          "frameId": "f2",
+          "value": {
+            "kind": "primitive",
+            "type": "int",
+            "display": "5"
+          }
+        }
+      ]
+    },
+    {
+      "location": {
+        "file": "Program.java",
+        "line": 6
+      },
+      "activeThread": "main",
+      "threads": [
+        {
+          "id": "main",
+          "name": "main",
+          "state": "running",
+          "frames": [
+            {
+              "id": "f1",
+              "className": "Program",
+              "method": "main",
+              "line": 6,
+              "locals": [
+                {
+                  "name": "args",
+                  "type": "java.lang.String[]",
+                  "value": {
+                    "kind": "ref",
+                    "id": "o1"
+                  }
+                },
+                {
+                  "name": "x",
+                  "type": "int",
+                  "value": {
+                    "kind": "primitive",
+                    "type": "int",
+                    "display": "2"
+                  }
+                },
+                {
+                  "name": "y",
+                  "type": "int",
+                  "value": {
+                    "kind": "primitive",
+                    "type": "int",
+                    "display": "3"
+                  }
+                },
+                {
+                  "name": "sum",
+                  "type": "int",
+                  "value": {
+                    "kind": "primitive",
+                    "type": "int",
+                    "display": "5"
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "statics": [],
+      "heap": [
+        {
+          "id": "o1",
+          "type": "java.lang.String[]",
+          "shape": "array",
+          "elements": [],
+          "state": "live",
+          "internal": true,
+          "inline": false
+        }
+      ],
+      "console": "",
+      "events": [
+        {
+          "type": "assign",
+          "target": {
+            "frameId": "f1",
+            "name": "sum"
+          },
+          "value": {
+            "kind": "primitive",
+            "type": "int",
+            "display": "5"
+          }
+        }
+      ]
+    },
+    {
+      "location": {
+        "file": "Program.java",
+        "line": 17
+      },
+      "activeThread": "main",
+      "threads": [
+        {
+          "id": "main",
+          "name": "main",
+          "state": "running",
+          "frames": [
+            {
+              "id": "f1",
+              "className": "Program",
+              "method": "main",
+              "line": 6,
+              "locals": [
+                {
+                  "name": "args",
+                  "type": "java.lang.String[]",
+                  "value": {
+                    "kind": "ref",
+                    "id": "o1"
+                  }
+                },
+                {
+                  "name": "x",
+                  "type": "int",
+                  "value": {
+                    "kind": "primitive",
+                    "type": "int",
+                    "display": "2"
+                  }
+                },
+                {
+                  "name": "y",
+                  "type": "int",
+                  "value": {
+                    "kind": "primitive",
+                    "type": "int",
+                    "display": "3"
+                  }
+                },
+                {
+                  "name": "sum",
+                  "type": "int",
+                  "value": {
+                    "kind": "primitive",
+                    "type": "int",
+                    "display": "5"
+                  }
+                }
+              ]
+            },
+            {
+              "id": "f3",
+              "className": "Point",
+              "method": "<init>",
+              "line": 17,
+              "locals": [
+                {
+                  "name": "this",
+                  "type": "Point",
+                  "value": {
+                    "kind": "ref",
+                    "id": "o2"
+                  }
+                },
+                {
+                  "name": "x",
+                  "type": "int",
+                  "value": {
+                    "kind": "primitive",
+                    "type": "int",
+                    "display": "5"
+                  }
+                },
+                {
+                  "name": "y",
+                  "type": "int",
+                  "value": {
+                    "kind": "primitive",
+                    "type": "int",
+                    "display": "0"
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "statics": [],
+      "heap": [
+        {
+          "id": "o1",
+          "type": "java.lang.String[]",
+          "shape": "array",
+          "elements": [],
+          "state": "live",
+          "internal": true,
+          "inline": false
+        },
+        {
+          "id": "o2",
+          "type": "Point",
+          "shape": "object",
+          "fields": [
+            {
+              "name": "x",
+              "type": "int",
+              "value": {
+                "kind": "primitive",
+                "type": "int",
+                "display": "0"
+              }
+            },
+            {
+              "name": "y",
+              "type": "int",
+              "value": {
+                "kind": "primitive",
+                "type": "int",
+                "display": "0"
+              }
+            }
+          ],
+          "state": "live",
+          "internal": false,
+          "inline": false,
+          "allocatedAt": {
+            "file": "Program.java",
+            "line": 6
+          }
+        }
+      ],
+      "console": "",
+      "events": [
+        {
+          "type": "allocate",
+          "objectId": "o2"
+        },
+        {
+          "type": "call",
+          "thread": "main",
+          "frameId": "f3"
+        }
+      ]
+    },
+    {
+      "location": {
+        "file": "Program.java",
+        "line": 6
+      },
+      "activeThread": "main",
+      "threads": [
+        {
+          "id": "main",
+          "name": "main",
+          "state": "running",
+          "frames": [
+            {
+              "id": "f1",
+              "className": "Program",
+              "method": "main",
+              "line": 6,
+              "locals": [
+                {
+                  "name": "args",
+                  "type": "java.lang.String[]",
+                  "value": {
+                    "kind": "ref",
+                    "id": "o1"
+                  }
+                },
+                {
+                  "name": "x",
+                  "type": "int",
+                  "value": {
+                    "kind": "primitive",
+                    "type": "int",
+                    "display": "2"
+                  }
+                },
+                {
+                  "name": "y",
+                  "type": "int",
+                  "value": {
+                    "kind": "primitive",
+                    "type": "int",
+                    "display": "3"
+                  }
+                },
+                {
+                  "name": "sum",
+                  "type": "int",
+                  "value": {
+                    "kind": "primitive",
+                    "type": "int",
+                    "display": "5"
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "statics": [],
+      "heap": [
+        {
+          "id": "o1",
+          "type": "java.lang.String[]",
+          "shape": "array",
+          "elements": [],
+          "state": "live",
+          "internal": true,
+          "inline": false
+        },
+        {
+          "id": "o2",
+          "type": "Point",
+          "shape": "object",
+          "fields": [
+            {
+              "name": "x",
+              "type": "int",
+              "value": {
+                "kind": "primitive",
+                "type": "int",
+                "display": "5"
+              }
+            },
+            {
+              "name": "y",
+              "type": "int",
+              "value": {
+                "kind": "primitive",
+                "type": "int",
+                "display": "0"
+              }
+            }
+          ],
+          "state": "live",
+          "internal": false,
+          "inline": false,
+          "allocatedAt": {
+            "file": "Program.java",
+            "line": 6
+          }
+        }
+      ],
+      "console": "",
+      "events": [
+        {
+          "type": "assign",
+          "target": {
+            "objectId": "o2",
+            "field": "x"
+          },
+          "value": {
+            "kind": "primitive",
+            "type": "int",
+            "display": "5"
+          }
+        },
+        {
+          "type": "assign",
+          "target": {
+            "objectId": "o2",
+            "field": "y"
+          },
+          "value": {
+            "kind": "primitive",
+            "type": "int",
+            "display": "0"
+          }
+        },
+        {
+          "type": "return",
+          "thread": "main",
+          "frameId": "f3"
+        }
+      ]
+    },
+    {
+      "location": {
+        "file": "Program.java",
+        "line": 7
+      },
+      "activeThread": "main",
+      "threads": [
+        {
+          "id": "main",
+          "name": "main",
+          "state": "running",
+          "frames": [
+            {
+              "id": "f1",
+              "className": "Program",
+              "method": "main",
+              "line": 7,
+              "locals": [
+                {
+                  "name": "args",
+                  "type": "java.lang.String[]",
+                  "value": {
+                    "kind": "ref",
+                    "id": "o1"
+                  }
+                },
+                {
+                  "name": "x",
+                  "type": "int",
+                  "value": {
+                    "kind": "primitive",
+                    "type": "int",
+                    "display": "2"
+                  }
+                },
+                {
+                  "name": "y",
+                  "type": "int",
+                  "value": {
+                    "kind": "primitive",
+                    "type": "int",
+                    "display": "3"
+                  }
+                },
+                {
+                  "name": "sum",
+                  "type": "int",
+                  "value": {
+                    "kind": "primitive",
+                    "type": "int",
+                    "display": "5"
+                  }
+                },
+                {
+                  "name": "p",
+                  "type": "Point",
+                  "value": {
+                    "kind": "ref",
+                    "id": "o99"
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "statics": [],
+      "heap": [
+        {
+          "id": "o1",
+          "type": "java.lang.String[]",
+          "shape": "array",
+          "elements": [],
+          "state": "live",
+          "internal": true,
+          "inline": false
+        },
+        {
+          "id": "o2",
+          "type": "Point",
+          "shape": "object",
+          "fields": [
+            {
+              "name": "x",
+              "type": "int",
+              "value": {
+                "kind": "primitive",
+                "type": "int",
+                "display": "5"
+              }
+            },
+            {
+              "name": "y",
+              "type": "int",
+              "value": {
+                "kind": "primitive",
+                "type": "int",
+                "display": "0"
+              }
+            }
+          ],
+          "state": "live",
+          "internal": false,
+          "inline": false,
+          "allocatedAt": {
+            "file": "Program.java",
+            "line": 6
+          }
+        }
+      ],
+      "console": "",
+      "events": [
+        {
+          "type": "assign",
+          "target": {
+            "frameId": "f1",
+            "name": "p"
+          },
+          "value": {
+            "kind": "ref",
+            "id": "o2"
+          }
+        }
+      ]
+    },
+    {
+      "location": {
+        "file": "Program.java",
+        "line": 17
+      },
+      "activeThread": "main",
+      "threads": [
+        {
+          "id": "main",
+          "name": "main",
+          "state": "running",
+          "frames": [
+            {
+              "id": "f1",
+              "className": "Program",
+              "method": "main",
+              "line": 7,
+              "locals": [
+                {
+                  "name": "args",
+                  "type": "java.lang.String[]",
+                  "value": {
+                    "kind": "ref",
+                    "id": "o1"
+                  }
+                },
+                {
+                  "name": "x",
+                  "type": "int",
+                  "value": {
+                    "kind": "primitive",
+                    "type": "int",
+                    "display": "2"
+                  }
+                },
+                {
+                  "name": "y",
+                  "type": "int",
+                  "value": {
+                    "kind": "primitive",
+                    "type": "int",
+                    "display": "3"
+                  }
+                },
+                {
+                  "name": "sum",
+                  "type": "int",
+                  "value": {
+                    "kind": "primitive",
+                    "type": "int",
+                    "display": "5"
+                  }
+                },
+                {
+                  "name": "p",
+                  "type": "Point",
+                  "value": {
+                    "kind": "ref",
+                    "id": "o2"
+                  }
+                }
+              ]
+            },
+            {
+              "id": "f4",
+              "className": "Point",
+              "method": "toString",
+              "line": 17,
+              "locals": [
+                {
+                  "name": "this",
+                  "type": "Point",
+                  "value": {
+                    "kind": "ref",
+                    "id": "o2"
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "statics": [],
+      "heap": [
+        {
+          "id": "o1",
+          "type": "java.lang.String[]",
+          "shape": "array",
+          "elements": [],
+          "state": "live",
+          "internal": true,
+          "inline": false
+        },
+        {
+          "id": "o2",
+          "type": "Point",
+          "shape": "object",
+          "fields": [
+            {
+              "name": "x",
+              "type": "int",
+              "value": {
+                "kind": "primitive",
+                "type": "int",
+                "display": "5"
+              }
+            },
+            {
+              "name": "y",
+              "type": "int",
+              "value": {
+                "kind": "primitive",
+                "type": "int",
+                "display": "0"
+              }
+            }
+          ],
+          "state": "live",
+          "internal": false,
+          "inline": false,
+          "allocatedAt": {
+            "file": "Program.java",
+            "line": 6
+          }
+        }
+      ],
+      "console": "",
+      "events": [
+        {
+          "type": "call",
+          "thread": "main",
+          "frameId": "f4"
+        }
+      ]
+    },
+    {
+      "location": {
+        "file": "Program.java",
+        "line": 8
+      },
+      "activeThread": "main",
+      "threads": [
+        {
+          "id": "main",
+          "name": "main",
+          "state": "running",
+          "frames": [
+            {
+              "id": "f1",
+              "className": "Program",
+              "method": "main",
+              "line": 8,
+              "locals": [
+                {
+                  "name": "args",
+                  "type": "java.lang.String[]",
+                  "value": {
+                    "kind": "ref",
+                    "id": "o1"
+                  }
+                },
+                {
+                  "name": "x",
+                  "type": "int",
+                  "value": {
+                    "kind": "primitive",
+                    "type": "int",
+                    "display": "2"
+                  }
+                },
+                {
+                  "name": "y",
+                  "type": "int",
+                  "value": {
+                    "kind": "primitive",
+                    "type": "int",
+                    "display": "3"
+                  }
+                },
+                {
+                  "name": "sum",
+                  "type": "int",
+                  "value": {
+                    "kind": "primitive",
+                    "type": "int",
+                    "display": "5"
+                  }
+                },
+                {
+                  "name": "p",
+                  "type": "Point",
+                  "value": {
+                    "kind": "ref",
+                    "id": "o2"
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "statics": [],
+      "heap": [
+        {
+          "id": "o1",
+          "type": "java.lang.String[]",
+          "shape": "array",
+          "elements": [],
+          "state": "live",
+          "internal": true,
+          "inline": false
+        },
+        {
+          "id": "o2",
+          "type": "Point",
+          "shape": "object",
+          "fields": [
+            {
+              "name": "x",
+              "type": "int",
+              "value": {
+                "kind": "primitive",
+                "type": "int",
+                "display": "5"
+              }
+            },
+            {
+              "name": "y",
+              "type": "int",
+              "value": {
+                "kind": "primitive",
+                "type": "int",
+                "display": "0"
+              }
+            }
+          ],
+          "state": "live",
+          "internal": false,
+          "inline": false,
+          "allocatedAt": {
+            "file": "Program.java",
+            "line": 6
+          }
+        }
+      ],
+      "console": "Point[x=5, y=0]\n",
+      "events": [
+        {
+          "type": "return",
+          "thread": "main",
+          "frameId": "f4"
+        },
+        {
+          "type": "output",
+          "text": "Point[x=5, y=0]\n"
+        }
+      ]
+    },
+    {
+      "location": {
+        "file": "Program.java",
+        "line": 9
+      },
+      "activeThread": "main",
+      "threads": [
+        {
+          "id": "main",
+          "name": "main",
+          "state": "running",
+          "frames": [
+            {
+              "id": "f1",
+              "className": "Program",
+              "method": "main",
+              "line": 9,
+              "locals": [
+                {
+                  "name": "args",
+                  "type": "java.lang.String[]",
+                  "value": {
+                    "kind": "ref",
+                    "id": "o1"
+                  }
+                },
+                {
+                  "name": "x",
+                  "type": "int",
+                  "value": {
+                    "kind": "primitive",
+                    "type": "int",
+                    "display": "2"
+                  }
+                },
+                {
+                  "name": "y",
+                  "type": "int",
+                  "value": {
+                    "kind": "primitive",
+                    "type": "int",
+                    "display": "3"
+                  }
+                },
+                {
+                  "name": "sum",
+                  "type": "int",
+                  "value": {
+                    "kind": "primitive",
+                    "type": "int",
+                    "display": "5"
+                  }
+                },
+                {
+                  "name": "p",
+                  "type": "Point",
+                  "value": {
+                    "kind": "null"
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "statics": [],
+      "heap": [
+        {
+          "id": "o1",
+          "type": "java.lang.String[]",
+          "shape": "array",
+          "elements": [],
+          "state": "live",
+          "internal": true,
+          "inline": false
+        },
+        {
+          "id": "o2",
+          "type": "Point",
+          "shape": "object",
+          "fields": [
+            {
+              "name": "x",
+              "type": "int",
+              "value": {
+                "kind": "primitive",
+                "type": "int",
+                "display": "5"
+              }
+            },
+            {
+              "name": "y",
+              "type": "int",
+              "value": {
+                "kind": "primitive",
+                "type": "int",
+                "display": "0"
+              }
+            }
+          ],
+          "state": "eligible",
+          "internal": false,
+          "inline": false,
+          "allocatedAt": {
+            "file": "Program.java",
+            "line": 6
+          }
+        }
+      ],
+      "console": "Point[x=5, y=0]\n",
+      "events": [
+        {
+          "type": "assign",
+          "target": {
+            "frameId": "f1",
+            "name": "p"
+          },
+          "value": {
+            "kind": "null"
+          }
+        },
+        {
+          "type": "eligible",
+          "objectId": "o2"
+        }
+      ]
+    }
+  ]
+}

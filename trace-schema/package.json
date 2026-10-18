@@ -1,0 +1,26 @@
+{
+  "name": "@java-visuals/trace-schema",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./schema.json": "./schema/trace.schema.json",
+    "./fixtures/*": "./fixtures/*"
+  },
+  "scripts": {
+    "generate": "json2ts -i schema/trace.schema.json -o src/trace.generated.ts --unreachableDefinitions --no-additionalProperties --bannerComment \"/* Generated from schema/trace.schema.json by json-schema-to-typescript. Do not edit; run npm run generate. */\"",
+    "build": "npm run generate && tsc --noEmit",
+    "validate": "tsx scripts/validate.ts",
+    "test": "npm run build && npm run validate"
+  },
+  "dependencies": {
+    "ajv": "^8.20.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.20.5",
+    "json-schema-to-typescript": "^16.0.0",
+    "tsx": "^4.20.0",
+    "typescript": "^5.9.0"
+  }
+}

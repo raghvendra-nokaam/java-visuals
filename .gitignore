@@ -1,0 +1,19 @@
+# Node
+node_modules/
+dist/
+.astro/
+
+# Gradle / Java
+.gradle/
+build/
+*.class
+!site/public/**/*.class
+
+# Generated Traces (built in CI)
+lessons/**/traces/
+
+# OS / editors
+.DS_Store
+.idea/
+.vscode/
+*.iml

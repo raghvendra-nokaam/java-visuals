@@ -25,9 +25,12 @@ const lessons = defineCollection({
     base: "../lessons",
     generateId: ({ entry }) => entry.replace(/\/lesson\.yaml$/, ""),
   }),
-  schema: z.strictObject({
+  schema: z
+    .strictObject({
     title: z.string(),
     kind: z.enum(["timeline", "pipeline", "execution"]),
+    /** Pipeline Lessons only: which bespoke visual draws it (site/src/renderers/pipeline). */
+    visual: slug.optional(),
     order: z.number().int().positive(),
     summary: z.string(),
     prerequisites: z.array(z.string().regex(/^[a-z0-9-]+\/[a-z0-9-]+$/, "a Lesson id like memory/method-calls")).default([]),
@@ -38,7 +41,11 @@ const lessons = defineCollection({
       .default([{ id: "default", label: "As written" }])
       .refine((v) => v[0]!.id === "default", "the first Variant must be `default`")
       .refine((v) => new Set(v.map((x) => x.id)).size === v.length, "Variant ids must be unique"),
-  }),
+    })
+    .refine((l) => (l.kind === "pipeline") === (l.visual !== undefined), {
+      message: "`visual` is required for Pipeline Lessons and only allowed on them",
+      path: ["visual"],
+    }),
 });
 
 export const collections = { tracks, lessons };

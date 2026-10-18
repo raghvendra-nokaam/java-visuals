@@ -28,7 +28,8 @@ description: One or two sentences shown on the home page and the Track page.
 
 ```yaml
 title: Method calls and Frames
-kind: execution     # execution | timeline | pipeline (only execution renders today)
+kind: execution     # execution | timeline | pipeline
+visual: how-java-runs  # Pipeline Lessons only: which bespoke visual draws it
 order: 1            # suggested position within the Track; must be unique in the Track
 summary: One sentence shown in Track listings.
 prerequisites:      # Lesson ids; advisory links, never locks. Unknown ids and cycles fail the build.
@@ -63,6 +64,12 @@ stops:
 ```
 
 The stop holds the facts (what changed). `narration.md` holds the story (why it mattered) and the Predict Prompts. Timeline Lessons have one Variant and no JVM Detail Level, so their narration headings take neither suffix.
+
+## Pipeline Lessons
+
+A Pipeline Lesson (`kind: pipeline`) animates a flow of Stages with its own bespoke visual. Each one looks different, so there's no generic data format. Its Steps and drawing code live in `site/src/renderers/pipeline/<visual>/`, registered by name in `steps.ts` and `renderers.ts`, and `lesson.yaml` picks one with `visual:`. Step ids are the Markers `narration.md` anchors to.
+
+If the lesson directory has a `Program.java`, `npm run record` writes its real `javap -c -p` listing to `traces/bytecode.txt`, so any bytecode the visual shows is exactly what `javac` produced.
 
 ## Variants
 

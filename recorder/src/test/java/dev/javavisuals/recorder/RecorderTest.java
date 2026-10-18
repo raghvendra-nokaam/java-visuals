@@ -126,6 +126,22 @@ class RecorderTest {
         assertFalse(Files.exists(lesson.resolve("traces/removed-variant.json")), "stale Trace should be removed");
     }
 
+    @Test
+    void writesRealBytecodeForPipelineLessons() throws Exception {
+        Path dir = Path.of("build/pipeline-lesson/lessons/jvm/how-java-runs");
+        Files.createDirectories(dir);
+        Files.copy(REPO.resolve("lessons/jvm/how-java-runs/Program.java"), dir.resolve("Program.java"),
+                java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+        Files.writeString(dir.resolve("lesson.yaml"), "kind: pipeline\n");
+
+        String listing = Files.readString(Main.writeBytecode(dir));
+
+        assertTrue(listing.contains("static int square(int);"), listing);
+        assertTrue(listing.contains("0: iload_0\n         1: iload_0\n         2: imul\n         3: ireturn"), listing);
+        assertTrue(listing.contains("static {};"), listing);
+        assertTrue(Main.findRecordableLessons(Path.of("build/pipeline-lesson/lessons")).contains(dir));
+    }
+
     private static void copyTree(Path from, Path to) throws java.io.IOException {
         try (var paths = Files.walk(from)) {
             for (Path p : paths.toList()) {

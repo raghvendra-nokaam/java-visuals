@@ -11,6 +11,7 @@ import java.util.List;
 
 /**
  * The parts of lesson.yaml the recorder needs: the Lesson kind and its Variant ids.
+ * Execution Lessons get Traces; Pipeline Lessons with a Program get its bytecode listing.
  * The site owns full validation of lesson.yaml (site/src/content.config.ts).
  */
 record LessonConfig(String kind, List<String> variants) {
@@ -34,5 +35,9 @@ record LessonConfig(String kind, List<String> variants) {
 
     boolean isExecution() {
         return kind.equals("execution");
+    }
+
+    boolean isPipeline() {
+        return kind.equals("pipeline");
     }
 }

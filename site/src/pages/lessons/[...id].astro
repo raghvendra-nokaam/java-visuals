@@ -2,17 +2,16 @@
 import Base from "../../layouts/Base.astro";
 import ExecutionLesson from "../../components/lessons/ExecutionLesson.tsx";
 import TimelineLesson from "../../components/lessons/TimelineLesson.tsx";
+import PipelineLesson from "../../components/lessons/PipelineLesson.tsx";
 import { loadCurriculum, trackOf, type LessonEntry } from "../../content/curriculum";
 import { loadExecutionLesson } from "../../content/executionLesson";
 import { loadTimelineLesson } from "../../content/loadTimelineLesson";
+import { loadPipelineLesson } from "../../content/loadPipelineLesson";
 import { href, trackHref } from "../../links";
 
 export async function getStaticPaths() {
   const { tracks, lessons } = await loadCurriculum();
   return [...lessons.values()].map((lesson) => {
-    if (lesson.data.kind === "pipeline") {
-      throw new Error(`${lesson.id}: Pipeline Lessons aren't supported yet (build plan, Phase 7)`);
-    }
     const track = tracks.find((t) => t.id === trackOf(lesson.id))!;
     const position = track.lessons.indexOf(lesson);
     return {
@@ -32,6 +31,7 @@ const { lesson, lessons, track, next } = Astro.props;
 const nextLink = next ? { title: next.data.title, href: href(`lessons/${next.id}/`) } : undefined;
 const execution = lesson.data.kind === "execution" ? loadExecutionLesson(lesson) : undefined;
 const timeline = lesson.data.kind === "timeline" ? loadTimelineLesson(lesson, lessons) : undefined;
+const pipeline = lesson.data.kind === "pipeline" ? loadPipelineLesson(lesson) : undefined;
 ---
 
 <Base title={`${lesson.data.title} | Java Visuals`} description={lesson.data.summary}>
@@ -54,6 +54,7 @@ const timeline = lesson.data.kind === "timeline" ? loadTimelineLesson(lesson, le
     )
   }
   {timeline && <TimelineLesson client:load lessonId={lesson.id} timeline={timeline.timeline} script={timeline.script} next={nextLink} />}
+  {pipeline && <PipelineLesson client:load lessonId={lesson.id} data={pipeline.data} script={pipeline.script} next={nextLink} />}
 </Base>
 
 <style>

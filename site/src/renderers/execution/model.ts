@@ -65,7 +65,9 @@ export function describe(step: Step, level: DetailLevel): string {
       const locals = f.locals.filter((l) => l.name !== "this").map((l) => `${l.name} = ${text(l.value)}`);
       return locals.length ? `${frameTitle(f)} (${locals.join(", ")})` : frameTitle(f);
     });
-    const state = multi ? ` (${thread.state === "runnable" ? "ready" : thread.state === "terminated" ? "finished" : thread.state})` : "";
+    const mount = thread.mounted === undefined ? "" : thread.mounted ? ", on a carrier" : ", unmounted";
+    const label = thread.state === "runnable" ? "ready" : thread.state === "terminated" ? "finished" : thread.state;
+    const state = multi ? ` (${thread.kind === "virtual" ? "virtual, " : ""}${label}${mount})` : "";
     parts.push(frames.length ? `${thread.name}${state} Stack, bottom to top: ${frames.join(", then ")}.` : `${thread.name}${state}: no Frames.`);
   }
 

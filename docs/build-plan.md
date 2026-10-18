@@ -109,7 +109,7 @@ JDI launches the Lesson Program in a debuggee JVM and steps it.
 
 ## v2 and later
 
-- **Concurrency Track** (first slice done 2026-10-18): deterministic multi-thread recording, Sub-steps, Schedules, and Monitors with owner and waiters; lessons on threads sharing the Heap, the lost update (lucky, unlucky and `synchronized`), and deadlock (opposite vs. same lock order). `ReentrantLock` (shown like a `synchronized` lock, read from its AQS state) and `wait`/`notify` lessons followed the same day. Still to do: virtual threads, which need carrier threads modelled.
+- **Concurrency Track** (first slice done 2026-10-18): deterministic multi-thread recording, Sub-steps, Schedules, and Monitors with owner and waiters; lessons on threads sharing the Heap, the lost update (lucky, unlucky and `synchronized`), and deadlock (opposite vs. same lock order). `ReentrantLock` (shown like a `synchronized` lock, read from its AQS state) and `wait`/`notify` lessons followed the same day. Virtual threads followed too, showing when a virtual thread is on a carrier and when it has let go of it. Which carrier it uses isn't shown, because that differs from run to run.
 - JVM Detail Level content (bytecode, object headers, generations) and the GC Track (scripted collections → `collected`).
 - Side-by-side Variant comparison.
 - File locks as an "OS resource" lesson.

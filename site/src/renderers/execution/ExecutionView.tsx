@@ -49,10 +49,15 @@ export default function ExecutionView({ trace, index, level, explanation }: Prop
                 <h2 className="region-title">
                   {multi ? (
                     <>
-                      Thread <span className="thread-name">{thread.name}</span>
+                      {thread.kind === "virtual" ? "Virtual thread" : "Thread"} <span className="thread-name">{thread.name}</span>
                       <span className="thread-state" data-state={thread.state}>
                         {threadStateLabel[thread.state]}
                       </span>
+                      {thread.mounted !== undefined && (
+                        <span className="thread-mount" data-mounted={thread.mounted || undefined}>
+                          {thread.mounted ? "on a carrier" : "unmounted"}
+                        </span>
+                      )}
                     </>
                   ) : (
                     <>

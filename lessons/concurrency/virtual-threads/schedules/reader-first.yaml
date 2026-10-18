@@ -1,0 +1,7 @@
+# Reader arrives first, finds the Mailbox empty, and has to wait.
+- run: main
+  until: join
+- run: Reader
+  until: waiting   # wait() releases the lock and puts Reader to sleep
+- run: Writer      # Writer gets the lock, leaves a message, notifies, and leaves
+- run: Reader      # Reader wakes, takes the lock back, and checks again

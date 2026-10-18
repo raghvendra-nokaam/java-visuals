@@ -234,6 +234,14 @@ export interface Thread {
    * The thread's Stack, outermost Frame first, current Frame last.
    */
   frames: Frame[];
+  /**
+   * Present for virtual threads.
+   */
+  kind?: "virtual";
+  /**
+   * Virtual threads only, where meaningful: true while it runs on a carrier thread, false when it has let go of its carrier (waiting or blocked). Absent while it's just waiting for its turn.
+   */
+  mounted?: boolean;
 }
 /**
  * This interface was referenced by `Trace`'s JSON-Schema

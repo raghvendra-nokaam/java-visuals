@@ -232,6 +232,28 @@ class RecorderTest {
     }
 
     @Test
+    void aWaitingVirtualThreadLetsGoOfItsCarrier() throws Exception {
+        Path dir = REPO.resolve("lessons/concurrency/virtual-threads");
+        Trace trace = Recorder.record(Lesson.compile(dir), "default", Schedule.read(dir, "reader-first"));
+        var reader = (java.util.function.Function<Step, Trace.ThreadState>) s ->
+                s.threads().stream().filter(t -> t.id().equals("Reader")).findFirst().orElseThrow();
+
+        Step waiting = trace.steps().stream().filter(s -> s.activeThread().equals("Reader")
+                && reader.apply(s).state().equals("waiting")).findFirst().orElseThrow();
+        assertEquals("virtual", reader.apply(waiting).kind());
+        assertEquals(Boolean.FALSE, reader.apply(waiting).mounted(), "unmounted while it waits, even inside synchronized");
+        Step running = trace.steps().stream().filter(s -> s.activeThread().equals("Reader")).findFirst().orElseThrow();
+        assertEquals(Boolean.TRUE, reader.apply(running).mounted());
+        assertTrue(objectsOfTypeIn(waiting, "java.lang.VirtualThread").size() == 2);
+        // The lock story is the same as with platform threads, reconstructed from the threads' side.
+        assertEquals(List.of("Reader"), objectsOfTypeIn(waiting, "Mailbox").getFirst().monitor().waiting());
+        assertEquals("hello\n", trace.steps().getLast().console());
+
+        Trace platform = Recorder.record(Lesson.compile(dir, "platform"), "platform", Schedule.read(dir, "reader-first"));
+        assertTrue(platform.steps().stream().flatMap(s -> s.threads().stream()).allMatch(t -> t.kind() == null && t.mounted() == null));
+    }
+
+    @Test
     void aMarkerNoVariantReachesFailsTheRecording() throws Exception {
         Path dir = Path.of("build/unreached-marker/lessons/test/variants");
         copyTree(Path.of("src/test/resources/lessons/test/variants"), dir);

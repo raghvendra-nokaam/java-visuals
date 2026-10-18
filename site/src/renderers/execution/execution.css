@@ -494,3 +494,20 @@
 .deadlock-banner strong {
   color: var(--wrong);
 }
+
+/* Virtual threads: whether it's on a carrier (platform) thread right now. */
+.thread-mount {
+  margin-left: 0.375rem;
+  padding: 0 0.5rem;
+  border: 1px dashed var(--ink-soft);
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--ink-soft);
+}
+
+.thread-mount[data-mounted] {
+  border-style: solid;
+  border-color: var(--stack);
+  color: var(--stack);
+}

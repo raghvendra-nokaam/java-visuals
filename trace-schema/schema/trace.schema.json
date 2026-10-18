@@ -220,6 +220,14 @@
           "items": {
             "$ref": "#/$defs/Frame"
           }
+        },
+        "kind": {
+          "description": "Present for virtual threads.",
+          "const": "virtual"
+        },
+        "mounted": {
+          "description": "Virtual threads only, where meaningful: true while it runs on a carrier thread, false when it has let go of its carrier (waiting or blocked). Absent while it's just waiting for its turn.",
+          "type": "boolean"
         }
       }
     },

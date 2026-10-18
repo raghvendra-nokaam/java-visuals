@@ -59,7 +59,8 @@ final class StateCapture {
     private final Set<String> internal = new HashSet<>();
     private final Map<String, Location> allocatedAt = new HashMap<>();
     private final Map<Long, String> threadIds = new HashMap<>();
-    private final Map<String, Integer> lastReachable = new HashMap<>();
+    /** Per thread: the last capture at which each Object was reachable from that thread's own Frames. */
+    private final Map<String, Map<String, Integer>> reachableFromThread = new HashMap<>();
     /** Per Frame id: the line it is executing and the capture at which it started that line. */
     private final Map<String, int[]> lineStartedAt = new HashMap<>();
     private int captureIndex = -1;
@@ -84,11 +85,13 @@ final class StateCapture {
             Location previousLine, List<ThreadReference> lessonThreads, Set<ThreadReference> finished)
             throws IncompatibleThreadStateException {
         var walk = new Walk();
+        locks = LockView.of(lessonThreads.stream().filter(t -> !finished.contains(t)).toList());
 
         List<ThreadState> threads = new ArrayList<>();
         for (ThreadReference thread : lessonThreads) {
             if (finished.contains(thread)) {
-                threads.add(new ThreadState(threadId(thread), thread.name(), "terminated", List.of()));
+                threads.add(new ThreadState(threadId(thread), thread.name(), "terminated", List.of(),
+                        thread.isVirtual() ? "virtual" : null, null));
                 continue;
             }
             List<String> ids = frameIds.getOrDefault(thread, List.of());
@@ -99,9 +102,11 @@ final class StateCapture {
 
         walk.drain();
 
-        // In flight: reachable at some point during the line the active Frame is still executing, so it is
-        // held on the operand stack (a just-constructed `new`, a just-returned value) and is not garbage yet.
+        // In flight: reachable from the active thread's own Frames at some point during the line its top Frame is
+        // still executing, so it is held on the operand stack (a just-constructed `new`, a just-returned value)
+        // and is not garbage yet. Reachability through other threads doesn't count: they can't have handed it over.
         List<String> activeIds = frameIds.getOrDefault(active, List.of());
+        Map<String, Integer> reachedByActive = reachableFromThread.getOrDefault(threadId(active), Map.of());
         if (!activeIds.isEmpty()) {
             String top = activeIds.getLast();
             int line = active.frame(0).location().lineNumber();
@@ -110,7 +115,7 @@ final class StateCapture {
             int lineStart = started[1];
             Set<String> reached = new HashSet<>(walk.seen.values());
             for (var known : List.copyOf(objects.entrySet())) {
-                if (!reached.contains(known.getKey()) && lastReachable.getOrDefault(known.getKey(), -1) >= lineStart) {
+                if (!reached.contains(known.getKey()) && reachedByActive.getOrDefault(known.getKey(), -1) >= lineStart) {
                     walk.enqueue(known.getValue(), false);
                 }
             }
@@ -118,7 +123,6 @@ final class StateCapture {
         }
         captureIndex++;
         Set<String> live = new HashSet<>(walk.seen.values());
-        live.forEach(id -> lastReachable.put(id, captureIndex));
 
         // Anything seen before but unreachable now is Eligible, as is whatever only it references.
         // A JDK Internal is different: the JDK may still hold it (e.g. ArrayList's shared empty array), so it
@@ -154,7 +158,27 @@ final class StateCapture {
                 .sorted(Comparator.comparingInt(id -> Integer.parseInt(id.substring(1))))
                 .map(id -> heapObject(id, objects.get(id), live.contains(id) ? "live" : "eligible", threads))
                 .toList();
+        recordReachableFromActive(threadId(active), threads, heap);
         return new State(threads, statics, heap);
+    }
+
+    private void recordReachableFromActive(String activeId, List<ThreadState> threads, List<HeapObject> heap) {
+        Map<String, HeapObject> byId = new HashMap<>();
+        heap.forEach(o -> byId.put(o.id(), o));
+        Deque<String> queue = new ArrayDeque<>();
+        threads.stream().filter(t -> t.id().equals(activeId)).flatMap(t -> t.frames().stream())
+                .flatMap(f -> f.locals().stream()).map(Variable::value)
+                .filter(v -> "ref".equals(v.kind())).forEach(v -> queue.add(v.id()));
+        Map<String, Integer> reached = reachableFromThread.computeIfAbsent(activeId, k -> new HashMap<>());
+        Set<String> seen = new HashSet<>();
+        while (!queue.isEmpty()) {
+            String id = queue.poll();
+            if (!seen.add(id) || !byId.containsKey(id)) continue;
+            reached.put(id, captureIndex);
+            HeapObject o = byId.get(id);
+            if (o.fields() != null) o.fields().forEach(f -> { if ("ref".equals(f.value().kind())) queue.add(f.value().id()); });
+            if (o.elements() != null) o.elements().forEach(v -> { if ("ref".equals(v.kind())) queue.add(v.id()); });
+        }
     }
 
     /** Our id for an Object already seen, or null. */
@@ -204,7 +228,14 @@ final class StateCapture {
             frames.add(new Frame(ids.get(i), location.declaringType().name(), location.method().name(),
                     location.lineNumber(), locals(f, walk)));
         }
-        return new ThreadState(threadId(thread), thread.name(), activeState != null ? activeState : status(thread), frames);
+        String state = activeState != null ? activeState : status(thread);
+        String kind = thread.isVirtual() ? "virtual" : null;
+        // Only where it's meaningful: a running thread is on a carrier by definition; for a waiting or blocked one
+        // read it. A thread merely parked by the recorder stays mounted as an artifact of recording, so say nothing.
+        Boolean mounted = !thread.isVirtual() ? null
+                : state.equals("running") ? Boolean.TRUE
+                : state.equals("waiting") || state.equals("blocked") ? mounted(thread) : null;
+        return new ThreadState(threadId(thread), thread.name(), state, frames, kind, mounted);
     }
 
     private List<Variable> locals(StackFrame frame, Walk walk) {
@@ -281,28 +312,55 @@ final class StateCapture {
                 monitor(obj, threads));
     }
 
+    /**
+     * The Object's lock as the Learner sees it, built from the threads' side: what each Lesson thread owns, is
+     * trying to enter, and is waiting on. Asking the Object instead misses virtual threads entirely.
+     */
     private Monitor monitor(ObjectReference obj, List<ThreadState> threads) {
-        if (!vm.canGetMonitorInfo()) return null;
-        try {
-            ThreadReference owner = obj.owningThread();
-            List<ThreadReference> waiters = obj.waitingThreads();
-            if (owner == null && waiters.isEmpty()) return null;
-            Set<String> known = new HashSet<>();
-            threads.forEach(t -> known.add(t.id()));
-            List<String> blocked = new ArrayList<>();
-            List<String> waiting = new ArrayList<>();
-            for (ThreadReference t : waiters) {
-                String tid = threadId(t);
-                if (!known.contains(tid)) return null;
-                if (t.status() != ThreadReference.THREAD_STATUS_MONITOR) waiting.add(tid);
-                else if (owner != null) blocked.add(tid); // with no owner it's about to get the lock, not blocked
+        ThreadReference ownerThread = locks.owner().get(obj);
+        String owner = ownerThread == null ? null : threadId(ownerThread);
+        List<String> blocked = new ArrayList<>();
+        List<String> waiting = new ArrayList<>();
+        if (owner != null) locks.contending().getOrDefault(obj, List.of()).forEach(t -> blocked.add(threadId(t)));
+        locks.waitingOn().getOrDefault(obj, List.of()).forEach(t -> waiting.add(threadId(t)));
+        if (owner == null && blocked.isEmpty() && waiting.isEmpty()) return null;
+        return new Monitor(owner, ownerThread == null ? 0 : locks.holds().getOrDefault(obj, 1), blocked, waiting);
+    }
+
+    private LockView locks = LockView.EMPTY;
+
+    /** Who owns, is entering, and is waiting on each monitor, for the Lesson threads alive at one capture. */
+    record LockView(Map<ObjectReference, ThreadReference> owner, Map<ObjectReference, Integer> holds,
+            Map<ObjectReference, List<ThreadReference>> contending, Map<ObjectReference, List<ThreadReference>> waitingOn) {
+
+        static final LockView EMPTY = new LockView(Map.of(), Map.of(), Map.of(), Map.of());
+
+        static LockView of(List<ThreadReference> threads) throws IncompatibleThreadStateException {
+            Map<ObjectReference, ThreadReference> owner = new HashMap<>();
+            Map<ObjectReference, Integer> holds = new HashMap<>();
+            Map<ObjectReference, List<ThreadReference>> contending = new HashMap<>();
+            Map<ObjectReference, List<ThreadReference>> waitingOn = new HashMap<>();
+            for (ThreadReference t : threads) {
+                if (t.virtualMachine().canGetMonitorFrameInfo()) {
+                    for (var info : t.ownedMonitorsAndFrames()) {
+                        owner.put(info.monitor(), t);
+                        holds.merge(info.monitor(), 1, Integer::sum);
+                    }
+                }
+                if (isBlockedOnMonitor(t)) {
+                    ObjectReference m = t.currentContendedMonitor();
+                    if (m == null) m = Recorder.waitTarget(t);
+                    if (m != null) contending.computeIfAbsent(m, k -> new ArrayList<>()).add(t);
+                } else if (isWaiting(t)) {
+                    ObjectReference m = Recorder.waitTarget(t);
+                    if (m != null) waitingOn.computeIfAbsent(m, k -> new ArrayList<>()).add(t);
+                }
             }
-            if (owner == null && blocked.isEmpty() && waiting.isEmpty()) return null;
-            String ownerId = owner == null ? null : threadId(owner);
-            if (ownerId != null && !known.contains(ownerId)) return null;
-            return new Monitor(ownerId, obj.entryCount(), blocked, waiting);
-        } catch (IncompatibleThreadStateException e) {
-            return null;
+            return new LockView(owner, holds, contending, waitingOn);
+        }
+
+        ThreadReference ownerOf(ObjectReference monitor) {
+            return monitor == null ? null : owner.get(monitor);
         }
     }
 
@@ -401,20 +459,67 @@ final class StateCapture {
     }
 
     /** Blocked on a lock nobody holds any more: it will get it as soon as it runs, so it's really just ready. */
-    private static boolean lockIsFree(ThreadReference thread) {
+    private boolean lockIsFree(ThreadReference thread) {
         try {
             ObjectReference monitor = thread.currentContendedMonitor();
-            return monitor != null && monitor.owningThread() == null;
+            if (monitor == null) monitor = Recorder.waitTarget(thread);
+            return monitor != null && locks.ownerOf(monitor) == null && monitor.owningThread() == null;
         } catch (IncompatibleThreadStateException | UnsupportedOperationException e) {
             return false;
         }
     }
 
-    private static String status(ThreadReference thread) {
+    /** In wait(), sleep(), join() or parked, rather than blocked on a lock. */
+    static boolean isWaiting(ThreadReference thread) {
+        int vs = virtualState(thread);
+        if (vs >= 0) return vs == 3 || vs == 4 || vs == 6 || vs == 7 || (vs >= 15 && vs <= 18);
+        int st = thread.status();
+        return st == ThreadReference.THREAD_STATUS_WAIT || st == ThreadReference.THREAD_STATUS_SLEEPING;
+    }
+
+    // ---- virtual threads (JDK 25 VirtualThread.state values) ----
+
+    private static final int VT_BLOCKING = 12, VT_BLOCKED = 13, VT_SUSPENDED_BIT = 256;
+
+    /** VirtualThread.state without the "suspended" bit, or -1 for platform threads. */
+    static int virtualState(ThreadReference thread) {
+        if (!thread.isVirtual()) return -1;
+        Field f = thread.referenceType().fieldByName("state");
+        return f != null && thread.getValue(f) instanceof com.sun.jdi.IntegerValue v ? v.value() & ~VT_SUSPENDED_BIT : -1;
+    }
+
+    /**
+     * An unmounted virtual thread queued to (re)enter a monitor, e.g. just notified. The JVM may still report it
+     * as waiting, but its own state says otherwise.
+     */
+    static boolean isVirtualBlockedOnMonitor(ThreadReference thread) {
+        int state = virtualState(thread);
+        return state == VT_BLOCKING || state == VT_BLOCKED;
+    }
+
+    private static boolean isBlockedOnMonitor(ThreadReference thread) {
+        return thread.status() == ThreadReference.THREAD_STATUS_MONITOR || isVirtualBlockedOnMonitor(thread);
+    }
+
+    /** Whether a virtual thread is on a carrier right now (null for platform threads). */
+    static Boolean mounted(ThreadReference thread) {
+        if (!thread.isVirtual()) return null;
+        Field f = thread.referenceType().fieldByName("carrierThread");
+        return f != null && thread.getValue(f) != null;
+    }
+
+    private String status(ThreadReference thread) {
         try {
             if (aqsLockOwner(thread) != null) return "blocked";
         } catch (IncompatibleThreadStateException e) {
             // not suspended: fall back to the plain status
+        }
+        if (isVirtualBlockedOnMonitor(thread)) return lockIsFree(thread) ? "runnable" : "blocked";
+        int vs = virtualState(thread);
+        if (vs >= 0) {
+            // A virtual thread's own state is the truth; the JVM's status lags while it's unmounted.
+            if (vs == 99) return "terminated";
+            return isWaiting(thread) ? "waiting" : "runnable";
         }
         return switch (thread.status()) {
             case ThreadReference.THREAD_STATUS_MONITOR -> lockIsFree(thread) ? "runnable" : "blocked";

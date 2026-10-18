@@ -36,7 +36,9 @@ public record Trace(
 
     public record SubStep(int index, int count, String label) {}
 
-    public record ThreadState(String id, String name, String state, List<Frame> frames) {}
+    /** {@code kind} is "virtual" for virtual threads (absent for platform threads); {@code mounted} says whether a virtual thread is on a carrier, where that's meaningful. */
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    public record ThreadState(String id, String name, String state, List<Frame> frames, String kind, Boolean mounted) {}
 
     public record Frame(String id, String className, String method, int line, List<Variable> locals) {}
 

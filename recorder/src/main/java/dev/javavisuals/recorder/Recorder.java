@@ -155,7 +155,10 @@ final class Recorder {
         var connector = Bootstrap.virtualMachineManager().defaultConnector();
         Map<String, Connector.Argument> args = connector.defaultArguments();
         args.get("main").setValue(Lesson.MAIN_CLASS);
-        args.get("options").setValue("-cp " + lesson.classesDir() + " -Dstdout.encoding=UTF-8");
+        // Parked virtual threads stay mounted on their carrier, so give the scheduler more carriers than any
+        // lesson has virtual threads; otherwise a new one could never mount while the others wait their turn.
+        args.get("options").setValue("-cp " + lesson.classesDir() + " -Dstdout.encoding=UTF-8"
+                + " -Djdk.virtualThreadScheduler.parallelism=8 -Djdk.virtualThreadScheduler.maxPoolSize=8");
         return connector.launch(args);
     }
 
@@ -254,10 +257,12 @@ final class Recorder {
     }
 
 
+    /** Started by the Lesson Program: a virtual thread, or a platform thread in the main thread group. */
     private boolean isLessonStarted(ThreadReference thread) {
+        if (lessonThreads.contains(thread) || ignored.contains(thread)) return false;
+        if (thread.isVirtual()) return true;
         var group = thread.threadGroup();
-        return group != null && group.name().equals("main") && !lessonThreads.contains(thread)
-                && !ignored.contains(thread) && !thread.name().equals("DestroyJavaVM");
+        return group != null && group.name().equals("main") && !thread.name().equals("DestroyJavaVM");
     }
 
     private void onThreadDeath(ThreadReference thread) {
@@ -335,9 +340,17 @@ final class Recorder {
     private ThreadReference lockHolder(ThreadReference thread) throws IncompatibleThreadStateException {
         ThreadReference aqsOwner = StateCapture.aqsLockOwner(thread);
         if (aqsOwner != null) return aqsOwner;
-        if (thread.status() != ThreadReference.THREAD_STATUS_MONITOR || !vm.canGetCurrentContendedMonitor()) return null;
+        boolean blockedOnMonitor = StateCapture.isVirtualBlockedOnMonitor(thread)
+                || thread.status() == ThreadReference.THREAD_STATUS_MONITOR;
+        if (!blockedOnMonitor || !vm.canGetCurrentContendedMonitor()) return null;
+        // An unmounted virtual thread queued for a monitor (e.g. after notify) may report no contended monitor.
         ObjectReference monitor = thread.currentContendedMonitor();
-        return monitor == null ? null : monitor.owningThread();
+        if (monitor == null) monitor = waitTarget(thread);
+        if (monitor == null) return null;
+        // A monitor held by a virtual thread reports no owner from the object's side, so ask the threads.
+        ThreadReference owner = monitor.owningThread();
+        if (owner == null) owner = StateCapture.LockView.of(lessonThreads.stream().filter(t -> !done.contains(t)).toList()).ownerOf(monitor);
+        return owner == null || owner.equals(thread) ? null : owner;
     }
 
     /** No thread can run but some aren't done: a deadlock if they're blocked on each other's locks. */
@@ -407,9 +420,10 @@ final class Recorder {
     private void settle() throws Exception {
         // A new thread posts its start event on its own schedule, possibly after its parent has already reached
         // the next line. It's in the thread list as soon as start() returns, so pick it up from there too.
-        for (ThreadReference thread : vm.allThreads()) {
+        for (ThreadReference thread : candidateThreads()) {
             if (isLessonStarted(thread) && !starting.contains(thread) && !done.contains(thread)
-                    && thread.status() != ThreadReference.THREAD_STATUS_ZOMBIE) {
+                    && thread.status() != ThreadReference.THREAD_STATUS_ZOMBIE
+                    && thread.status() != ThreadReference.THREAD_STATUS_NOT_STARTED) {
                 starting.add(thread);
             }
         }
@@ -450,6 +464,22 @@ final class Recorder {
             }
             if (!keep) set.resume();
         }
+    }
+
+    /**
+     * Every live thread: the platform threads JDI lists, plus virtual threads, which it doesn't list, found as
+     * instances of {@code java.lang.VirtualThread} instead.
+     */
+    private List<ThreadReference> candidateThreads() {
+        List<ThreadReference> threads = new ArrayList<>(vm.allThreads());
+        if (vm.canGetInstanceInfo()) {
+            for (var type : vm.classesByName("java.lang.VirtualThread")) {
+                for (ObjectReference o : type.instances(0)) {
+                    if (o instanceof ThreadReference t && !threads.contains(t)) threads.add(t);
+                }
+            }
+        }
+        return threads;
     }
 
     // ------------------------------------------------------------------ invocations and steps
@@ -582,7 +612,8 @@ final class Recorder {
     private void noticeNotifiedWaiters(ThreadReference active) throws Exception {
         if (!vm.canGetMonitorInfo()) return;
         for (ThreadReference thread : lessonThreads) {
-            if (thread.equals(active) || done.contains(thread) || !parked.contains(thread)) continue;
+            // A virtual thread's own state field already says whether it was notified (StateCapture reads it).
+            if (thread.equals(active) || done.contains(thread) || !parked.contains(thread) || thread.isVirtual()) continue;
             if (thread.status() != ThreadReference.THREAD_STATUS_WAIT || !capture.isWaitingInLessonCode(thread)) continue;
             ObjectReference monitor = waitTarget(thread);
             ThreadReference owner = monitor == null ? null : monitor.owningThread();
@@ -597,7 +628,7 @@ final class Recorder {
     }
 
     /** The object a thread is inside {@code wait()} on: the receiver of the {@code Object.wait} frame. */
-    private static ObjectReference waitTarget(ThreadReference thread) throws IncompatibleThreadStateException {
+    static ObjectReference waitTarget(ThreadReference thread) throws IncompatibleThreadStateException {
         for (StackFrame frame : thread.frames()) {
             var method = frame.location().method();
             if (method.declaringType().name().equals("java.lang.Object") && !method.isNative() && !method.isStatic()) {

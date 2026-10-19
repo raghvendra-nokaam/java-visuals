@@ -56,13 +56,13 @@ group.skipIf(!existsSync(contended) || !existsSync(deadlocked))("multi-threaded 
     expect(text).toMatch(/^Thread B, line 5\./);
     expect(text).toMatch(/A \(ready\) Stack/);
     expect(text).toMatch(/B \(blocked\) Stack/);
-    expect(text).toMatch(/Counter \(count = 0\), locked by A, B waiting to lock it/);
+    expect(text).toMatch(/TicketOffice \(sold = 0\), locked by A, B waiting to lock it/);
   });
 
   it("describe announces a Sub-step and a deadlock", () => {
     const t = JSON.parse(readFileSync(contended, "utf8")) as Trace;
-    const read = t.steps.find((s) => s.subStep?.label.startsWith("read count"))!;
-    expect(describe(read, "simple")).toMatch(/read count \(0\) \(part 1 of 3\)/);
+    const read = t.steps.find((s) => s.subStep?.label.startsWith("read sold"))!;
+    expect(describe(read, "simple")).toMatch(/read sold \(0\) \(part 1 of 3\)/);
     const d = JSON.parse(readFileSync(deadlocked, "utf8")) as Trace;
     expect(describe(d.steps.at(-1)!, "simple")).toMatch(/Deadlock: A and B can never continue\./);
   });

@@ -1,28 +1,31 @@
 # Java Visuals
 
-Learn Java by watching it run. Every lesson animates what actually happens: Frames pushed onto the Stack, objects placed on the Heap, References drawn between them, bytecode moving through the JVM, and how Java itself changed from 1996 to today.
+Learn Java by watching it run. Every lesson animates what actually happens: variables filling up, objects being built, Java choosing which method to run, threads sharing (and fighting over) the same data, bytecode moving through the JVM, and how Java itself changed from 1996 to today.
 
-It's for people who already know some Java syntax and want to understand what happens underneath it, from students to developers preparing for senior roles.
+It starts from the basics (variables, operators, loops, keywords, classes and objects) and goes all the way to the JVM, memory and concurrency, for anyone from students to developers preparing for senior roles.
 
 ## What's in it
 
 | Track | Lessons |
 |---|---|
 | **History** | The Sun years (1996 to 2006) · Java 5: new syntax, same JVM · Oracle, lambdas and modules · A release every six months (JDK 10 to 27) |
+| **Basics** | Variables and primitive types · Operators and expressions · Decisions and loops · static, final and this · Java's keywords at a glance |
+| **Objects and classes** | Classes and objects · Encapsulation · Inheritance · Polymorphism · Abstraction |
 | **The JVM** | How Java runs your code: javac, class loading, verification, the interpreter's operand stack, and the JIT |
 | **Memory** | Method calls and Frames · Objects and References · Pass-by-value · When objects become eligible |
-| **Concurrency** | One Heap, many Stacks · The lost update · ReentrantLock · Waiting for a message · Deadlock · Virtual threads |
+| **Concurrency** | One Heap, many Stacks · The lost update · ReentrantLock · Waiting for a message · Deadlock · Virtual threads, each told as a real-life scene (ticket agents, a records room, a kitchen pass, bank clerks) |
 
-Every lesson plays in the same Player: play, pause, step, scrub, change speed, use the keyboard (← → Space Home End), and answer **Predict Prompts** that pause the animation and ask what happens next. Memory lessons can switch between a **Simple** view and a **JVM detail** view that reveals JDK internals, and some lessons have **Variants** you can switch between at the same moment, such as reassigning a parameter vs. changing the object it points to.
+Every lesson plays in the same Player: play, pause, step, scrub, change speed, use the keyboard (← → Space Home End), and answer **Predict Prompts** that pause the animation and ask what happens next. Most code lessons show the current method's variables as labelled boxes; Memory lessons draw the full Stack and Heap and can switch between a **Simple** view and a **JVM detail** view that reveals JDK internals, and some lessons have **Variants** you can switch between at the same moment, such as reassigning a parameter vs. changing the object it points to.
 
 ## How it works
 
 Nothing on the site is a hand-drawn approximation of Java's behaviour:
 
 1. **Execution Lessons** are real Java 25 programs. At build time the **recorder** runs each one on a real JVM under the Java Debug Interface and saves every Step (Stacks, Heap, statics, console) as a **Trace** ([ADR 0001](docs/adr/0001-pre-recorded-traces.md)). Programs with several threads run under an author-written **Schedule** that fixes the interleaving, so a race or a deadlock happens the same way on every build ([ADR 0002](docs/adr/0002-author-defined-schedules-for-concurrency.md)).
-2. **Pipeline Lessons** show real `javap` output for their example program, generated the same way.
-3. **Timeline Lessons** are structured release data. Recent releases are checked against openjdk.org.
-4. The **site** replays all of it statically: no server, no Java in the browser.
+2. **Scenes** (the Concurrency Track, polymorphism) are pictures drawn from those same Traces: a ticket agent's thought bubble is the value the thread really read.
+3. **Animation Lessons** are bespoke visuals with no code walkthrough, like the keyword reference card or the trip from source file to JIT. Those with an example program show its real `javap` output.
+4. **Timeline Lessons** are structured release data. Recent releases are checked against openjdk.org.
+5. The **site** replays all of it statically: no server, no Java in the browser.
 
 ```
 lessons/  ──recorder (JDI, javap)──▶  Traces + bytecode  ──Astro build──▶  static site
@@ -50,7 +53,7 @@ npm run dev
 
 | Command | What it does |
 |---|---|
-| `npm run record` | Record every Execution Lesson and generate Pipeline bytecode |
+| `npm run record` | Record every Execution Lesson and generate Animation Lesson bytecode |
 | `npm run dev` | Start the site with hot reload |
 | `npm run build` | Record, then build the static site into `site/dist` |
 | `npm run validate` | Check every Trace against the schema and semantic rules |

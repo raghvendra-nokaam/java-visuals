@@ -1,0 +1,10 @@
+title: Classes and objects
+kind: execution
+order: 1
+summary: One Lamp class, two lamps. See how a class describes objects, how each object keeps its own fields, and how a method works on the object it's called on.
+prerequisites:
+  - basics/static-final-this
+detail: simple
+variants:
+  - id: default
+    label: As written

@@ -115,7 +115,7 @@ export default function ExecutionView({ trace, index, level, explanation }: Prop
   );
 }
 
-function CodePanel({
+export function CodePanel({
   trace,
   step,
   highlightLine,

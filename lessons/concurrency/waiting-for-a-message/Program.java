@@ -1,11 +1,11 @@
 public class Program {
     public static void main(String[] args) throws InterruptedException {
-        Mailbox box = new Mailbox();
-        Thread reader = new Thread(new Reader(box), "Reader"); // @mark create-threads
-        Thread writer = new Thread(new Writer(box), "Writer");
-        reader.start(); // @mark start-threads
-        writer.start();
-        reader.join(); // @mark join
-        writer.join();
+        Pass pass = new Pass();
+        Thread waiter = new Thread(new Waiter(pass), "Waiter"); // @mark create-threads
+        Thread chef = new Thread(new Chef(pass), "Chef");
+        waiter.start(); // @mark start-threads
+        chef.start();
+        waiter.join(); // @mark join
+        chef.join();
     } // @mark end
 }

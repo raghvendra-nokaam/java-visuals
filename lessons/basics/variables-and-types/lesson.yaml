@@ -1,0 +1,9 @@
+title: Variables and primitive types
+kind: execution
+order: 1
+summary: Watch labelled boxes get created and filled. Meet int, long, double, boolean and char, and find out why String isn't one of them.
+prerequisites: []
+detail: simple
+variants:
+  - id: default
+    label: As written

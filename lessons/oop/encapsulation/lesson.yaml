@@ -1,0 +1,12 @@
+title: Encapsulation
+kind: execution
+order: 2
+summary: A bank account that refuses to go below zero. Compare a private balance guarded by a method with a public one anybody can change.
+prerequisites:
+  - oop/classes-and-objects
+detail: simple
+variants:
+  - id: default
+    label: private balance
+  - id: public-field
+    label: public balance

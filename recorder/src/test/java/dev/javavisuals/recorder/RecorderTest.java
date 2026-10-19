@@ -127,12 +127,12 @@ class RecorderTest {
     }
 
     @Test
-    void writesRealBytecodeForPipelineLessons() throws Exception {
+    void writesRealBytecodeForAnimationLessons() throws Exception {
         Path dir = Path.of("build/pipeline-lesson/lessons/jvm/how-java-runs");
         Files.createDirectories(dir);
         Files.copy(REPO.resolve("lessons/jvm/how-java-runs/Program.java"), dir.resolve("Program.java"),
                 java.nio.file.StandardCopyOption.REPLACE_EXISTING);
-        Files.writeString(dir.resolve("lesson.yaml"), "kind: pipeline\n");
+        Files.writeString(dir.resolve("lesson.yaml"), "kind: animation\n");
 
         String listing = Files.readString(Main.writeBytecode(dir));
 
@@ -150,11 +150,11 @@ class RecorderTest {
         Trace second = Recorder.record(Lesson.compile(dir), "default", unlucky);
         assertEquals(TraceJson.toJson(first), TraceJson.toJson(second));
 
-        assertEquals("1\n", first.steps().getLast().console());
+        assertEquals("1 tickets recorded\n", first.steps().getLast().console());
         List<String> reads = first.steps().stream()
-                .filter(s -> s.subStep() != null && s.subStep().label().startsWith("read count"))
+                .filter(s -> s.subStep() != null && s.subStep().label().startsWith("read sold"))
                 .map(s -> s.activeThread() + " " + s.subStep().label()).toList();
-        assertEquals(List.of("A read count (0)", "B read count (0)"), reads);
+        assertEquals(List.of("A read sold (0)", "B read sold (0)"), reads);
     }
 
     @Test
@@ -165,11 +165,11 @@ class RecorderTest {
         Step blocked = trace.steps().stream().filter(s -> s.threads().stream()
                 .anyMatch(t -> t.id().equals(s.activeThread()) && t.state().equals("blocked"))).findFirst().orElseThrow();
         assertEquals("B", blocked.activeThread());
-        HeapObject counter = objectsOfTypeIn(blocked, "Counter").getFirst();
+        HeapObject counter = objectsOfTypeIn(blocked, "TicketOffice").getFirst();
         assertEquals("A", counter.monitor().owner());
         assertEquals(List.of("B"), counter.monitor().blocked());
         assertTrue(blocked.events().contains(Event.lock("lock-block", "B", counter.id())));
-        assertEquals("2\n", trace.steps().getLast().console());
+        assertEquals("2 tickets recorded\n", trace.steps().getLast().console());
     }
 
     @Test
@@ -203,29 +203,29 @@ class RecorderTest {
         assertEquals("A", lock.monitor().owner());
         assertEquals(2, lock.monitor().entryCount(), "increment() and add() each hold it");
         assertEquals(List.of("B"), lock.monitor().blocked());
-        assertEquals("2 added, 0 gave up\n", trace.steps().getLast().console());
+        assertEquals("2 filed, 0 turned away\n", trace.steps().getLast().console());
 
         Trace tryLock = Recorder.record(Lesson.compile(dir, "try-lock"), "try-lock", Schedule.read(dir, "try-lock"));
-        assertEquals("1 added, 1 gave up\n", tryLock.steps().getLast().console());
+        assertEquals("1 filed, 1 turned away\n", tryLock.steps().getLast().console());
     }
 
     @Test
     void waitGetsAWaitingStepAndReleasesTheLock() throws Exception {
         Path dir = REPO.resolve("lessons/concurrency/waiting-for-a-message");
-        Trace trace = Recorder.record(Lesson.compile(dir), "default", Schedule.read(dir, "reader-first"));
+        Trace trace = Recorder.record(Lesson.compile(dir), "default", Schedule.read(dir, "waiter-first"));
         Step waiting = trace.steps().stream().filter(s -> s.threads().stream()
                 .anyMatch(t -> t.id().equals(s.activeThread()) && t.state().equals("waiting"))).findFirst().orElseThrow();
-        assertEquals("Reader", waiting.activeThread());
+        assertEquals("Waiter", waiting.activeThread());
         assertEquals(7, waiting.location().line());
-        HeapObject box = objectsOfTypeIn(waiting, "Mailbox").getFirst();
+        HeapObject box = objectsOfTypeIn(waiting, "Pass").getFirst();
         assertEquals(null, box.monitor().owner(), "wait() gave the lock up");
-        assertEquals(List.of("Reader"), box.monitor().waiting());
-        assertEquals("hello\n", trace.steps().getLast().console());
+        assertEquals(List.of("Waiter"), box.monitor().waiting());
+        assertEquals("Served soup\n", trace.steps().getLast().console());
 
-        // notifyAll() moves Reader from waiting to wanting the lock; once Writer lets go it's simply ready.
+        // notifyAll() moves the waiter from waiting to wanting the lock; once the chef lets go it is simply ready.
         List<String> readerStates = new java.util.ArrayList<>();
         for (Step s : trace.steps()) {
-            String state = s.threads().stream().filter(t -> t.id().equals("Reader")).findFirst().map(t -> t.state()).orElse("-");
+            String state = s.threads().stream().filter(t -> t.id().equals("Waiter")).findFirst().map(t -> t.state()).orElse("-");
             if (readerStates.isEmpty() || !readerStates.getLast().equals(state)) readerStates.add(state); // collapse repeats
         }
         assertTrue(String.join(" ", readerStates).contains("waiting blocked runnable running"), readerStates.toString());
@@ -234,22 +234,22 @@ class RecorderTest {
     @Test
     void aWaitingVirtualThreadLetsGoOfItsCarrier() throws Exception {
         Path dir = REPO.resolve("lessons/concurrency/virtual-threads");
-        Trace trace = Recorder.record(Lesson.compile(dir), "default", Schedule.read(dir, "reader-first"));
+        Trace trace = Recorder.record(Lesson.compile(dir), "default", Schedule.read(dir, "waiter-first"));
         var reader = (java.util.function.Function<Step, Trace.ThreadState>) s ->
-                s.threads().stream().filter(t -> t.id().equals("Reader")).findFirst().orElseThrow();
+                s.threads().stream().filter(t -> t.id().equals("Waiter")).findFirst().orElseThrow();
 
-        Step waiting = trace.steps().stream().filter(s -> s.activeThread().equals("Reader")
+        Step waiting = trace.steps().stream().filter(s -> s.activeThread().equals("Waiter")
                 && reader.apply(s).state().equals("waiting")).findFirst().orElseThrow();
         assertEquals("virtual", reader.apply(waiting).kind());
         assertEquals(Boolean.FALSE, reader.apply(waiting).mounted(), "unmounted while it waits, even inside synchronized");
-        Step running = trace.steps().stream().filter(s -> s.activeThread().equals("Reader")).findFirst().orElseThrow();
+        Step running = trace.steps().stream().filter(s -> s.activeThread().equals("Waiter")).findFirst().orElseThrow();
         assertEquals(Boolean.TRUE, reader.apply(running).mounted());
         assertTrue(objectsOfTypeIn(waiting, "java.lang.VirtualThread").size() == 2);
         // The lock story is the same as with platform threads, reconstructed from the threads' side.
-        assertEquals(List.of("Reader"), objectsOfTypeIn(waiting, "Mailbox").getFirst().monitor().waiting());
-        assertEquals("hello\n", trace.steps().getLast().console());
+        assertEquals(List.of("Waiter"), objectsOfTypeIn(waiting, "Pass").getFirst().monitor().waiting());
+        assertEquals("Served soup\n", trace.steps().getLast().console());
 
-        Trace platform = Recorder.record(Lesson.compile(dir, "platform"), "platform", Schedule.read(dir, "reader-first"));
+        Trace platform = Recorder.record(Lesson.compile(dir, "platform"), "platform", Schedule.read(dir, "waiter-first"));
         assertTrue(platform.steps().stream().flatMap(s -> s.threads().stream()).allMatch(t -> t.kind() == null && t.mounted() == null));
     }
 

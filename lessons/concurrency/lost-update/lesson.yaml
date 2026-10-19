@@ -1,7 +1,9 @@
 title: The lost update
 kind: execution
+view: scene
+scene: ticket-office
 order: 2
-summary: Two threads each add 1 to a shared counter, and the result is sometimes 1. See the exact moment an update disappears, and how synchronized stops it.
+summary: Two ticket agents each sell one ticket, yet the office sometimes records only one sale. See the exact moment a sale disappears, and how synchronized stops it.
 prerequisites:
   - concurrency/threads-share-the-heap
 detail: simple

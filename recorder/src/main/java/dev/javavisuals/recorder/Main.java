@@ -17,8 +17,8 @@ import java.util.stream.Stream;
  *
  * <pre>
  * recorder record &lt;lesson-dir&gt;        every Variant of one Lesson → &lt;lesson-dir&gt;/traces/&lt;variant&gt;.json
- *                                     (a Pipeline Lesson gets &lt;lesson-dir&gt;/traces/bytecode.txt instead)
- * recorder record-all &lt;lessons-dir&gt;   every Execution and Pipeline Lesson under it
+ *                                     (a Animation Lesson gets &lt;lesson-dir&gt;/traces/bytecode.txt instead)
+ * recorder record-all &lt;lessons-dir&gt;   every Execution and Animation Lesson under it
  * </pre>
  */
 public final class Main {
@@ -41,12 +41,12 @@ public final class Main {
     }
 
     private static void record(Path dir) throws Exception {
-        if (LessonConfig.read(dir).isPipeline()) writeBytecode(dir);
+        if (LessonConfig.read(dir).isAnimation()) writeBytecode(dir);
         else recordLesson(dir);
     }
 
     /**
-     * Writes {@code javap -c -p} output for every class of a Pipeline Lesson's Program, so the lesson shows the
+     * Writes {@code javap -c -p} output for every class of a Animation Lesson's Program, so the lesson shows the
      * bytecode javac really produces rather than a hand-typed copy.
      */
     static Path writeBytecode(Path dir) throws Exception {
@@ -100,7 +100,7 @@ public final class Main {
         return traces;
     }
 
-    /** Execution Lessons, and Pipeline Lessons that have a Program to disassemble. */
+    /** Execution Lessons, and Animation Lessons that have a Program to disassemble. */
     static List<Path> findRecordableLessons(Path root) throws IOException {
         try (Stream<Path> files = Files.walk(root)) {
             return files.filter(p -> p.getFileName().toString().equals("lesson.yaml"))
@@ -109,7 +109,7 @@ public final class Main {
                         try {
                             LessonConfig config = LessonConfig.read(dir);
                             return config.isExecution()
-                                    || (config.isPipeline() && Files.exists(dir.resolve(Lesson.MAIN_CLASS + ".java")));
+                                    || (config.isAnimation() && Files.exists(dir.resolve(Lesson.MAIN_CLASS + ".java")));
                         } catch (IOException e) {
                             throw new IllegalStateException(e);
                         }

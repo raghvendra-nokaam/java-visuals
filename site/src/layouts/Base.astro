@@ -18,6 +18,13 @@ const { title, description = "Learn Java by watching it run, step by step." } = 
     <meta name="description" content={description} />
     <link rel="icon" type="image/svg+xml" href={href("favicon.svg")} />
     <title>{title}</title>
+    <script is:inline>
+      // Apply a remembered light/dark choice before the page paints, so it never flashes the other theme.
+      try {
+        const theme = localStorage.getItem("java-visuals:theme");
+        if (theme === "light" || theme === "dark") document.documentElement.dataset.theme = theme;
+      } catch {}
+    </script>
   </head>
   <body>
     <slot />

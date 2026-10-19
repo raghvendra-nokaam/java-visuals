@@ -4,7 +4,7 @@ Vocabulary follows [CONTEXT.md](../CONTEXT.md). Key decisions: [ADR-0001](adr/00
 
 **Status (2026-10-18):** Phases 0–8 are done, so v1 is complete. The next work is under "v2 and later" below. One deviation from the plan: the Execution renderer draws Frames and Objects as HTML with an SVG layer for References, rather than all-SVG, which made text layout, linked highlighting and accessibility simpler.
 
-**v1 scope:** History Track (Timeline), "How Java runs your code" (Pipeline), 3–4 Memory Execution Lessons. Concurrency is v2 — but the Trace format is designed for multiple Stacks from day one.
+**v1 scope:** History Track (Timeline), "How Java runs your code" (Pipeline, now called Animation), 3–4 Memory Execution Lessons. Concurrency is v2 — but the Trace format is designed for multiple Stacks from day one.
 
 **Guiding rule:** build the riskiest pieces first. The recorder and the Trace format are the foundation; if they're wrong, everything on top is wrong. History content is low-risk and comes after the Player works.
 
@@ -110,6 +110,7 @@ JDI launches the Lesson Program in a debuggee JVM and steps it.
 ## v2 and later
 
 - **Concurrency Track** (first slice done 2026-10-18): deterministic multi-thread recording, Sub-steps, Schedules, and Monitors with owner and waiters; lessons on threads sharing the Heap, the lost update (lucky, unlucky and `synchronized`), and deadlock (opposite vs. same lock order). `ReentrantLock` (shown like a `synchronized` lock, read from its AQS state) and `wait`/`notify` lessons followed the same day. Virtual threads followed too, showing when a virtual thread is on a carrier and when it has let go of it. Which carrier it uses isn't shown, because that differs from run to run.
+- **Views, scenes and new Tracks** (2026-10-19): Execution Lessons default to a light Variables view, with the Stack/Heap diagram opt-in (`view: memory`). The Concurrency Track was retold as real-life scenes driven by the Trace (ticket office, guest book, records room, kitchen pass, bank ledgers). Pipeline Lessons became Animation Lessons, which can be any bespoke visual. New Basics and Objects-and-classes Tracks, with a method-lookup scene for polymorphism and abstraction. A collapsible side nav with previous/next replaced progress tracking.
 - JVM Detail Level content (bytecode, object headers, generations) and the GC Track (scripted collections → `collected`).
 - Side-by-side Variant comparison.
 - File locks as an "OS resource" lesson.

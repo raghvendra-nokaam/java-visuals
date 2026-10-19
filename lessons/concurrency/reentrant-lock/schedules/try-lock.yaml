@@ -4,5 +4,5 @@
 - run: A
   until: update
   steps: 1
-- run: B           # tryLock() fails at once, so B counts a miss and finishes
+- run: B           # tryLock() fails at once, so B is turned away
 - run: A

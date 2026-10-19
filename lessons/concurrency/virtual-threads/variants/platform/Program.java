@@ -1,9 +1,9 @@
 public class Program {
     public static void main(String[] args) throws InterruptedException {
-        Mailbox box = new Mailbox();
-        Thread reader = Thread.ofPlatform().name("Reader").start(new Reader(box)); // @mark start-reader
-        Thread writer = Thread.ofPlatform().name("Writer").start(new Writer(box)); // @mark start-writer
-        reader.join(); // @mark join
-        writer.join();
+        Pass pass = new Pass();
+        Thread waiter = Thread.ofPlatform().name("Waiter").start(new Waiter(pass)); // @mark start-waiter
+        Thread chef = Thread.ofPlatform().name("Chef").start(new Chef(pass)); // @mark start-chef
+        waiter.join(); // @mark join
+        chef.join();
     } // @mark end
 }

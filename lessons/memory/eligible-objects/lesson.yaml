@@ -1,5 +1,6 @@
 title: When objects become eligible
 kind: execution
+view: memory
 order: 4
 summary: Three ways an object loses its last Reference, including two objects that only point at each other.
 prerequisites:

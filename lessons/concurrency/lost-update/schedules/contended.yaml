@@ -1,9 +1,9 @@
-# The same interleaving as "unlucky", but now the increment is inside synchronized.
+# The same interleaving as "unlucky", but now the update is inside synchronized.
 - run: main
   until: join
 - run: A
-  until: increment
-  steps: 1        # A holds the lock and has read count
+  until: record
+  steps: 1        # A holds the lock and has read sold
 - run: B
   until: blocked  # B can't get the lock, so it has to wait
 - run: A          # A finishes and releases the lock

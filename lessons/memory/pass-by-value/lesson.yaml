@@ -1,5 +1,6 @@
 title: Pass-by-value
 kind: execution
+view: memory
 order: 3
 summary: Java copies every argument into the called method's Frame. Find out why changing a parameter sometimes reaches the caller and sometimes doesn't.
 prerequisites:

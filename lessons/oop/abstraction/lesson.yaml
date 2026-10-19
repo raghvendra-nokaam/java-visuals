@@ -1,0 +1,12 @@
+title: Abstraction
+kind: execution
+view: scene
+scene: method-lookup
+order: 5
+summary: An abstract Shape knows how to describe itself but not its own area. Watch a method written in the parent call one that only the children provide.
+prerequisites:
+  - oop/polymorphism
+detail: simple
+variants:
+  - id: default
+    label: As written

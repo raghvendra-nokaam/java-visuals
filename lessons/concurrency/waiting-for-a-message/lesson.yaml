@@ -1,14 +1,16 @@
 title: Waiting for a message
 kind: execution
+view: scene
+scene: kitchen-pass
 order: 4
-summary: One thread waits for another to hand it a message. See how wait() gives up a lock, how notifyAll() wakes the waiter, and why the check sits in a loop.
+summary: A waiter waits at the kitchen pass until the chef rings the bell. See how wait() gives up the pass, how notifyAll() wakes the waiter, and why the check sits in a loop.
 prerequisites:
   - concurrency/lost-update
 detail: simple
 variants:
   - id: default
-    label: Reader first
-    schedule: reader-first
-  - id: writer-first
-    label: Writer first
-    schedule: writer-first
+    label: Waiter first
+    schedule: waiter-first
+  - id: chef-first
+    label: Chef first
+    schedule: chef-first

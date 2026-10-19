@@ -1,49 +1,49 @@
 ## @start
 
-So far every program has had one thread: `main`. This one creates a `Board` and two `Signer` tasks that both point at it, then starts two more threads to run them.
+So far every program has had one thread: `main`. Here `main` is a host who sets out a guest book and invites two guests, Ada and Bo. Each guest is a separate thread.
 
 ## @create-threads
 
-`new Thread(...)` creates a Thread object on the Heap. Its `task` field holds the Signer it will run, but nothing runs yet: a Thread does nothing until it's started.
+`new Thread(...)` gets a guest ready: a Thread object holding the `Signer` task it will run. Nothing happens yet. A Thread does nothing until it's started.
 
 ## @start-threads
 
-`start()` asks the JVM for a real, running thread. Each new thread gets its own Stack and begins in its task's `run` method.
+`start()` sends the guest in. Each thread gets its own Stack, its private notepad, and begins in its task's `run` method.
 
 ## @join
 
-Three threads now, three Stacks: `main`, A and B. Only one runs at a time here, and the scheduler decides which. `main` is about to wait for A with `join`.
+Two guests are inside now, plus the host. Only one moves at a time here, and the scheduler decides who. The host is about to wait for Ada with `join`.
 
 ## Predict @join
 
-A and B are about to run the same `run` method. Can A see B's local variables?
+Ada and Bo will each count the letters in their name into a local variable, `letters`. Can Bo see Ada's `letters`?
 
 - [ ] Yes, threads share all memory
-- [x] No: each thread's locals live in its own Stack, and only the Heap is shared
-- [ ] Only if both threads run the same class
+- [x] No: each thread's local variables are its own, and only objects like the guest book are shared
+- [ ] Only if both run the same class
 
-> Every thread gets its own Stack, so locals like `letters` belong to one thread. Objects on the Heap, like the Board, are shared by every thread that holds a Reference to them.
+> Every thread has its own Stack, so locals like `letters` are like a private notepad. The guest book is an object on the Heap, and anyone holding a Reference to it can write in it.
 
 ## @local
 
-`letters` is about to appear in A's own Stack. B will get a separate `letters` in its Stack.
+Ada is about to jot `letters` on her own notepad. Bo will get a separate one.
 
 ## @sign
 
-A and B both hold a Reference to the same Board. A is about to write its name into slot 0.
+Ada and Bo hold a Reference to the same guest book. Ada is about to write her name on line 0.
 
 ## @local@B
 
-A has finished. B now runs the same code with its own Stack and its own `letters`.
+Ada has finished. Bo now runs the same code with his own notepad.
 
 ## @local@B in interleaved
 
-The scheduler switched to B before A wrote anything. Threads can be switched between any two Steps, and the program doesn't get a say in when.
+The scheduler switched to Bo before Ada wrote anything. Threads can be switched between any two Steps, and the program doesn't get a say in when.
 
 ## @result
 
-Both names are on the Board. Two threads wrote into one shared object, but each wrote its own slot, so nothing collided. The next lesson shows what happens when they write to the same place.
+Both names are in the book. Two threads wrote into one shared object, but each wrote its own line, so nothing collided. The next lesson shows what happens when they write to the same place.
 
 ## @end
 
-The order the threads ran in changed between Variants, but the result didn't, because they never touched the same data. Switch Variant at the top to compare.
+The order the guests signed in changed between Variants, but the book didn't, because they never wrote on the same line. Switch Variant at the top to compare.

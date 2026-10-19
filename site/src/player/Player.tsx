@@ -26,9 +26,6 @@ interface Props<T extends StepSource> {
   offersJvmDetail: boolean;
   /** Show the "easier on a larger screen" note on phones (Execution Lessons, whose diagrams need width). */
   smallScreenNote?: boolean;
-  /** Called once the Learner reaches the last Step. */
-  onReachEnd?: () => void;
-  next?: { title: string; href: string };
 }
 
 /** Base delay between Steps at 1× speed. */
@@ -41,8 +38,6 @@ export default function Player<T extends StepSource>({
   renderer,
   defaultLevel,
   offersJvmDetail,
-  onReachEnd,
-  next,
   smallScreenNote = false,
 }: Props<T>) {
   const variantIds = Object.keys(variants);
@@ -66,11 +61,6 @@ export default function Player<T extends StepSource>({
     const timer = setTimeout(() => dispatch({ type: "next" }), STEP_MS / state.speed);
     return () => clearTimeout(timer);
   }, [state.playing, state.index, state.speed, dispatch]);
-
-  const atEnd = state.index === config.stepCount - 1;
-  useEffect(() => {
-    if (atEnd) onReachEnd?.();
-  }, [atEnd, onReachEnd]);
 
   useEffect(() => {
     // Bring the prompt into view before focusing it: on a phone it can sit below the fold.
@@ -187,11 +177,6 @@ export default function Player<T extends StepSource>({
                 <>
                   {narration && <Prose text={narration.text} className="narration-text" />}
                   {waitingPrompt && <p className="narration-hint">Step forward to answer a question about what happens next.</p>}
-                  {atEnd && next && (
-                    <p className="narration-next">
-                      Next lesson: <a href={next.href}>{next.title}</a>
-                    </p>
-                  )}
                 </>
               )}
             </section>

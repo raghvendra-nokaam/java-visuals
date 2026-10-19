@@ -1,0 +1,177 @@
+/* The Variables panel: a lighter alternative to the Stack/Heap diagram. */
+.vars-panel {
+  display: grid;
+  gap: 1rem;
+  align-content: start;
+}
+
+.vars-calls {
+  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.25rem;
+  font-family: var(--font-mono);
+  font-size: 0.875rem;
+  color: var(--ink-soft);
+}
+
+.vars-call[data-current] {
+  color: var(--stack);
+  font-weight: 700;
+}
+
+.vars-call-sep {
+  margin: 0 0.25rem;
+}
+
+.vars-empty {
+  margin: 0;
+  color: var(--ink-soft);
+  font-style: italic;
+}
+
+.vars-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  align-items: flex-start;
+}
+
+/* A variable is a labelled box: its type on top, its name, and the value inside. */
+.var-box {
+  display: grid;
+  gap: 0.125rem;
+  min-width: 6.5rem;
+  padding: 0.5rem 0.75rem 0.625rem;
+  background: var(--surface);
+  border: 2px solid var(--stack);
+  border-radius: var(--radius-card);
+}
+
+.var-box[data-object] {
+  border-color: var(--heap);
+}
+
+.var-type {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--ink-soft);
+}
+
+.var-name {
+  font-family: var(--font-mono);
+  font-weight: 700;
+}
+
+.var-value {
+  display: inline-block;
+  font-family: var(--font-mono);
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--stack);
+  padding: 0 0.25rem;
+  border-radius: var(--radius-small);
+}
+
+.var-field .var-value,
+.var-cells .var-value {
+  font-size: 0.9375rem;
+  color: var(--ink);
+}
+
+.var-value[data-changed] {
+  animation: slot-flash 1.4s ease-out;
+}
+
+.var-object {
+  margin-top: 0.25rem;
+  padding: 0.375rem 0.5rem;
+  background: var(--heap-tint);
+  border-radius: var(--radius-small);
+}
+
+.var-object .var-object {
+  margin-top: 0;
+}
+
+.var-object-type {
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: var(--heap);
+}
+
+.var-fields {
+  margin: 0.25rem 0 0;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.125rem 0.75rem;
+  font-family: var(--font-mono);
+  font-size: 0.875rem;
+}
+
+.var-field {
+  display: contents;
+}
+
+.var-field dt {
+  color: var(--ink-soft);
+}
+
+.var-field dd {
+  margin: 0;
+}
+
+.var-same {
+  font-size: 0.875rem;
+  color: var(--ink-soft);
+}
+
+.var-cells {
+  display: flex;
+  list-style: none;
+  margin: 0.25rem 0 0;
+  padding: 0;
+}
+
+.var-cells li {
+  display: grid;
+  justify-items: center;
+  min-width: 2.25rem;
+  padding: 0 0.25rem;
+  border: 1px solid var(--rule);
+  background: var(--surface);
+}
+
+.var-cells li + li {
+  border-left: none;
+}
+
+.var-cell-index {
+  font-size: 0.6875rem;
+  color: var(--ink-soft);
+}
+
+.vars-statics {
+  padding-top: 0.75rem;
+  border-top: 1px dashed var(--rule);
+}
+
+.vars-static-class {
+  display: grid;
+  gap: 0.375rem;
+}
+
+.vars-static-name {
+  font-family: var(--font-mono);
+  font-weight: 700;
+  color: var(--ink-soft);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .var-value[data-changed] {
+    animation: none;
+    background: color-mix(in srgb, var(--stack) 25%, var(--surface));
+  }
+}

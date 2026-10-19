@@ -1,14 +1,16 @@
 title: Virtual threads
 kind: execution
+view: scene
+scene: kitchen-pass
 order: 6
-summary: The same two threads, but virtual. See a virtual thread let go of its carrier thread while it waits, and compare it with a platform thread.
+summary: The same kitchen, but the waiter and chef are virtual threads. See a waiting virtual thread give up its carrier thread, and compare it with platform threads.
 prerequisites:
   - concurrency/waiting-for-a-message
 detail: simple
 variants:
   - id: default
     label: Virtual threads
-    schedule: reader-first
+    schedule: waiter-first
   - id: platform
     label: Platform threads
-    schedule: reader-first
+    schedule: waiter-first

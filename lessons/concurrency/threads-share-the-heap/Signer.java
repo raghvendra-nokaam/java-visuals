@@ -1,16 +1,16 @@
 class Signer implements Runnable {
-    private final Board board;
+    private final GuestBook book;
     private final String name;
-    private final int slot;
+    private final int line;
 
-    Signer(Board board, String name, int slot) {
-        this.board = board;
+    Signer(GuestBook book, String name, int line) {
+        this.book = book;
         this.name = name;
-        this.slot = slot;
+        this.line = line;
     }
 
     public void run() {
         int letters = name.length(); // @mark local // @mark local@B
-        board.names[slot] = name; // @mark sign
+        book.signatures[line] = name; // @mark sign
     }
 }

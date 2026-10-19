@@ -1,79 +1,79 @@
 ## @start
 
-A Reader thread wants a message that a Writer thread will put in a shared `Mailbox`. If Reader gets there first, it has to wait without wasting time spinning in a loop.
+In a restaurant kitchen, the pass is the counter where the chef puts finished dishes and waiters pick them up. Here a Waiter thread wants a dish that a Chef thread hasn't made yet. If the waiter gets there first, it has to wait without pacing up and down.
 
 ## @join
 
-Both threads share the one Mailbox. Its `message` starts out `null`, so it's empty.
+The waiter and the chef share one `Pass`. Its `dish` starts out `null`: the counter is empty.
 
 ## @take-lock
 
-Reader is about to take the Mailbox's lock. Both `take` and `put` use it, so only one of them can look at `message` at a time.
+The waiter is about to take the pass's lock. Both `collect` and `serve` use it, so only one of them can be at the counter at a time.
 
 ## @check
 
-Reader holds the lock and is about to check whether a message has arrived.
+The waiter is at the counter and about to check whether a dish is there.
 
 ## @wait in default
 
-The Mailbox is empty, so Reader is about to call `wait()`.
+The counter is empty, so the waiter is about to call `wait()`.
 
 ## Predict @wait in default
 
-Reader calls `wait()` while holding the Mailbox's lock. Can Writer get in to put a message?
+The waiter calls `wait()` while holding the pass's lock. Can the chef get to the counter to put the dish down?
 
-- [ ] No: Reader keeps the lock while it waits
-- [x] Yes: `wait()` releases the lock until Reader is woken up
+- [ ] No: the waiter keeps the lock while it waits
+- [x] Yes: `wait()` gives up the lock until the waiter is woken
 - [ ] Only after a timeout
 
-> `wait()` gives up the lock and puts the thread to sleep in one step. That's what lets Writer in. When Reader wakes up, it must get the lock back before it continues.
+> `wait()` gives up the lock and puts the thread to sleep in one step. That's what lets the chef in. When the waiter wakes up, it must get the lock back before it continues.
 
-## @wait@Reader#2 in default
+## @wait@Waiter#2 in default
 
-Reader is waiting. It holds nothing and won't run again until another thread calls `notify()` or `notifyAll()` on the same object.
+The waiter is asleep at the side, holding nothing. It won't run again until someone calls `notify()` or `notifyAll()` on the same pass.
 
 ## @put-lock in default
 
-Writer is about to take the lock. Reader gave it up when it called `wait()`, so it's free.
+The chef is about to take the lock. The waiter gave it up when it called `wait()`, so the counter is free.
 
 ## @deposit
 
-Writer is about to store `"hello"` in the Mailbox.
+The chef is about to put the soup on the counter.
 
 ## @notify in default
 
-Writer is about to call `notifyAll()`, which wakes every thread waiting on the Mailbox.
+The chef is about to ring the bell: `notifyAll()` wakes every thread waiting on the pass.
 
 ## Predict @notify in default
 
-When Writer calls `notifyAll()`, does Reader start running immediately?
+When the chef rings the bell, does the waiter pick up the soup straight away?
 
 - [ ] Yes, right away
-- [x] Not until Writer leaves its `synchronized` block and releases the lock
-- [ ] No, Reader also needs `start()` again
+- [x] Not until the chef steps away from the counter and releases the lock
+- [ ] No, the waiter also needs `start()` again
 
-> Notifying moves Reader from waiting to wanting the lock. Writer still holds it, so Reader can't continue until Writer finishes its `synchronized` block.
+> The bell moves the waiter from sleeping to wanting the counter. The chef still holds the lock, so the waiter can't continue until the chef's `synchronized` block ends.
 
-## @check@Reader#2 in default
+## @check@Waiter#2 in default
 
-Reader is awake and holds the lock again, so it checks the condition one more time. That's why the check is a `while`, not an `if`: by the time a woken thread runs, the condition may have changed again, and threads can even wake up without being notified.
+The waiter is awake and has the counter again, so it checks once more. That's why the check is a `while`, not an `if`: by the time a woken thread runs, things may have changed, and threads can even wake up without a bell.
 
 ## @collect
 
-There's a message now. Reader is about to take it and empty the Mailbox.
+There's soup on the counter. The waiter is about to take it and leave the counter empty.
 
 ## @got
 
-Reader got its message, without ever spinning in a loop burning time while it waited.
+The waiter serves the soup, without ever pacing back and forth while it waited.
 
-## @put-lock in writer-first
+## @put-lock in chef-first
 
-Writer got there first, so the lock is free and the Mailbox is empty.
+The chef got there first, so the counter is free and empty.
 
-## @check in writer-first
+## @check in chef-first
 
-Reader holds the lock and is about to check. Writer already left a message, so Reader won't need to wait.
+The waiter is at the counter and about to check. The soup is already there, so it won't need to wait.
 
-## @got in writer-first
+## @got in chef-first
 
-Reader never called `wait()`. It only waits when it has to. Switch Variant to see it wait.
+The waiter never called `wait()`. It only waits when it has to. Switch Variant to see it wait.

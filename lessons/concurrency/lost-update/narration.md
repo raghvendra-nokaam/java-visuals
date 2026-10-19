@@ -1,53 +1,53 @@
 ## @start
 
-Two threads will each add 1 to the same `Counter`. It starts at 0, so you'd expect it to end at 2.
+A ticket office keeps one shared tally of tickets sold. Two agents, threads A and B, will each sell one ticket and add it to the tally. It starts at 0, so it should end at 2.
 
 ## @join
 
-A and B are ready, both holding a Reference to the one Counter on the Heap.
+Both agents are ready, and both hold a Reference to the same `TicketOffice`. There's one tally, and two people about to update it.
 
-## @increment
+## @record
 
-`count++` looks like one action, but it's three: read `count`, add 1, write it back. This line is split into those parts so you can see each one.
+Recording a sale is `sold++`. It looks like one action, but an agent really does three things: look at the tally, add one in their head, and write the new number back.
 
-## Predict @increment
+## Predict @record
 
-A is about to read `count`. If the scheduler switches to B right after A's read, what will B read?
+Agent A is about to look at the tally. If agent B also looks before A writes anything back, what will B see?
 
-- [ ] 1, because A has already counted
+- [ ] 1, because A has already sold a ticket
 - [x] 0, because A hasn't written anything back yet
 - [ ] Nothing: B has to wait until A is done
 
-> A's new value exists only inside A's own working space until A writes it back. Until then, `count` on the Heap is still 0, and nothing stops B from reading it.
+> A's new number exists only in A's head until A writes it back. Until then the tally still says 0, and nothing stops B from reading it.
 
-## @increment@B
+## @record@B
 
-B is about to read `count`, and it's still 0. Both threads will be working from the same stale value, and each will write back 1.
+Agent B is about to look at the tally too, and it still says 0. Both agents will be working from the same old number, and each will write back 1.
 
-## @increment@B in lucky
+## @record@B in lucky
 
-This time A finished writing 1 before B started, so B is about to read 1.
+This time agent A finished writing 1 before B looked, so B is about to see 1.
 
 ## @result
 
-It printed 1. There were two increments, but B's write replaced A's. That's a lost update. Nothing crashed and nothing warned you: the answer is just wrong, and only some timings show it.
+Two tickets were sold, but the tally says 1. B's write replaced A's: a lost update. Nothing crashed and nothing warned anyone. The number is just wrong, and only some timings show it.
 
 ## @result in lucky
 
-It printed 2. Same code, different timing. That's why race conditions are so hard to find: most runs look fine.
+The tally says 2. Same code, different timing. That's why race conditions are so hard to find: most runs look fine.
 
 ## @lock in synchronized
 
-`synchronized (this)` takes the Counter's lock before touching `count`. Only one thread can hold a given object's lock at a time.
+`synchronized (this)` makes an agent take the office's lock before touching the tally. Only one agent can hold it at a time.
 
 ## @lock@B#2 in synchronized
 
-B wants the Counter's lock, but A holds it, so B is blocked. It can't run at all until A lets go.
+Agent B wants the lock, but A holds it, so B has to wait. It can't even look at the tally until A lets go.
 
-## @increment@B in synchronized
+## @record@B in synchronized
 
-A released the lock as it left the `synchronized` block. B got the lock and is about to read 1, A's result.
+A released the lock when it left the `synchronized` block. B got it and is about to see 1, A's result.
 
 ## @result in synchronized
 
-2, every time, whatever the timing. While one thread holds the lock, no other thread using the same lock can get between its read and its write.
+2, every time, whatever the timing. While one agent holds the lock, no other agent using the same lock can get between its read and its write.

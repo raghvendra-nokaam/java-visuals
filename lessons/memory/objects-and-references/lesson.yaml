@@ -1,5 +1,6 @@
 title: Objects and References
 kind: execution
+view: memory
 order: 2
 summary: Two variables can point at the same object. See what that means when one of them changes it.
 prerequisites:

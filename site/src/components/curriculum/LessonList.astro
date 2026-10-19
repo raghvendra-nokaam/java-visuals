@@ -1,0 +1,41 @@
+---
+import "./curriculum.css";
+
+export interface LessonListItem {
+  id: string;
+  title: string;
+  summary: string;
+  href: string;
+  prerequisites: { id: string; title: string; href: string }[];
+}
+
+interface Props {
+  lessons: LessonListItem[];
+  compact?: boolean;
+}
+const { lessons, compact = false } = Astro.props;
+---
+
+<ol class="lesson-list" data-compact={compact || undefined}>
+  {
+    lessons.map((lesson) => (
+      <li class="lesson-item">
+        <a href={lesson.href} class="lesson-link">
+          {lesson.title}
+        </a>
+        {!compact && <p class="lesson-summary">{lesson.summary}</p>}
+        {!compact && lesson.prerequisites.length > 0 && (
+          <p class="lesson-prereqs">
+            Builds on{" "}
+            {lesson.prerequisites.map((p, i) => (
+              <>
+                {i > 0 && ", "}
+                <a href={p.href}>{p.title}</a>
+              </>
+            ))}
+          </p>
+        )}
+      </li>
+    ))
+  }
+</ol>

@@ -1,5 +1,7 @@
 title: Deadlock
 kind: execution
+view: scene
+scene: bank-ledgers
 order: 5
 summary: Two transfers lock the same two accounts in opposite orders and end up waiting for each other forever. Then one rule makes it impossible.
 prerequisites:

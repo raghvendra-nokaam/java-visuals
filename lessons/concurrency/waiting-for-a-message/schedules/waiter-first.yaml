@@ -1,0 +1,7 @@
+# The waiter arrives first, finds the pass empty, and has to wait.
+- run: main
+  until: join
+- run: Waiter
+  until: waiting   # wait() releases the pass and puts the waiter to sleep
+- run: Chef        # the chef gets the pass, puts the soup down, rings the bell, and leaves
+- run: Waiter      # the waiter wakes, takes the pass back, and checks again

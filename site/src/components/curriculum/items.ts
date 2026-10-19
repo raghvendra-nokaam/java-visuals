@@ -1,6 +1,6 @@
 import type { LessonEntry } from "../../content/curriculum";
 import { lessonHref } from "../../links";
-import type { LessonListItem } from "./LessonList";
+import type { LessonListItem } from "./LessonList.astro";
 
 export function toListItems(lessons: LessonEntry[], all: Map<string, LessonEntry>): LessonListItem[] {
   return lessons.map((l) => ({

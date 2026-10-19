@@ -1,6 +1,6 @@
 ---
-import Base from "../layouts/Base.astro";
-import LessonList from "../components/curriculum/LessonList.tsx";
+import Shell from "../layouts/Shell.astro";
+import LessonList from "../components/curriculum/LessonList.astro";
 import { toListItems } from "../components/curriculum/items";
 import { loadCurriculum } from "../content/curriculum";
 import { trackHref } from "../links";
@@ -8,7 +8,7 @@ import { trackHref } from "../links";
 const { tracks, lessons } = await loadCurriculum();
 ---
 
-<Base title="Java Visuals">
+<Shell title="Java Visuals">
   <main class="home">
     <h1>Java Visuals</h1>
     <p class="lede">
@@ -23,13 +23,13 @@ const { tracks, lessons } = await loadCurriculum();
               <a href={trackHref(track.id)}>{track.data.title}</a>
             </h2>
             <p>{track.data.description}</p>
-            {track.lessons.length > 0 && <LessonList client:load compact lessons={toListItems(track.lessons, lessons)} />}
+            {track.lessons.length > 0 && <LessonList compact lessons={toListItems(track.lessons, lessons)} />}
           </li>
         ))
       }
     </ol>
   </main>
-</Base>
+</Shell>
 
 <style>
   .home {

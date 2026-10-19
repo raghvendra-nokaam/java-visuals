@@ -1,5 +1,5 @@
 title: How Java runs your code
-kind: pipeline
+kind: animation
 visual: how-java-runs
 order: 1
 summary: Follow one small program from source file to bytecode, through class loading and linking, into the interpreter and the JIT compiler.

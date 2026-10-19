@@ -1,0 +1,83 @@
+---
+import type { LessonEntry } from "../../content/curriculum";
+import { lessonHref } from "../../links";
+
+interface Props {
+  previous?: LessonEntry;
+  next?: LessonEntry;
+}
+const { previous, next } = Astro.props;
+---
+
+<nav class="pager" aria-label="Previous and next lesson">
+  {
+    previous ? (
+      <a class="pager-link" data-dir="previous" href={lessonHref(previous.id)}>
+        <span class="pager-label">Previous</span>
+        <span class="pager-title">{previous.data.title}</span>
+      </a>
+    ) : (
+      <span />
+    )
+  }
+  {
+    next && (
+      <a class="pager-link" data-dir="next" href={lessonHref(next.id)}>
+        <span class="pager-label">Next</span>
+        <span class="pager-title">{next.data.title}</span>
+      </a>
+    )
+  }
+</nav>
+
+<style>
+  .pager {
+    max-width: 90rem;
+    margin: 2rem auto 0;
+    padding: 0 1.5rem 3rem;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+  }
+
+  .pager-link {
+    display: grid;
+    gap: 0.125rem;
+    padding: 0.75rem 1rem;
+    border: 1px solid var(--rule);
+    border-radius: var(--radius-card);
+    background: var(--surface);
+    color: var(--ink);
+    text-decoration: none;
+  }
+
+  .pager-link:hover {
+    border-color: var(--stack);
+  }
+
+  .pager-link[data-dir="next"] {
+    grid-column: 2;
+    text-align: right;
+  }
+
+  .pager-label {
+    font-size: 0.875rem;
+    color: var(--ink-soft);
+  }
+
+  .pager-title {
+    font-weight: 700;
+    color: var(--stack);
+  }
+
+  @media (max-width: 40rem) {
+    .pager {
+      grid-template-columns: 1fr;
+      padding: 0 1rem 2rem;
+    }
+
+    .pager-link[data-dir="next"] {
+      grid-column: 1;
+    }
+  }
+</style>

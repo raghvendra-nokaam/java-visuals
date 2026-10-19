@@ -1,0 +1,8 @@
+title: Java's keywords at a glance
+kind: animation
+visual: keywords
+order: 5
+summary: A reference card of every word Java reserves, grouped by the job it does, each with a small example. Includes the words that only look like keywords.
+prerequisites:
+  - basics/static-final-this
+detail: simple

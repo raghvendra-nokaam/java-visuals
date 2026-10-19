@@ -1,5 +1,6 @@
 /* Keep focused or scrolled-to content clear of the sticky playback bar. */
 html:has(.controls) {
+  scroll-padding-top: 4rem;
   scroll-padding-bottom: 9rem;
 }
 
@@ -110,12 +111,6 @@ select {
   padding: 0.05em 0.3em;
   background: var(--stack-tint);
   border-radius: var(--radius-small);
-}
-
-.narration-next {
-  margin: 0.75rem 0 0;
-  font-size: 1.125rem;
-  font-weight: 700;
 }
 
 .narration-hint {

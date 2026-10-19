@@ -1,11 +1,11 @@
-# Both threads read count before either writes it back.
+# Both agents read the sales count before either writes it back.
 - run: main
   until: join
 - run: A
-  until: increment
-  steps: 1        # A reads count (0)...
+  until: record
+  steps: 1        # A reads sold (0)...
 - run: B
-  until: increment
+  until: record
   steps: 1        # ...and so does B, before A has written
 - run: A          # A adds 1 and writes 1
 - run: B          # B adds 1 to the 0 it read, and also writes 1

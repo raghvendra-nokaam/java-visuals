@@ -1,0 +1,12 @@
+title: Polymorphism
+kind: execution
+view: scene
+scene: method-lookup
+order: 4
+summary: Three pets in one Animal array, one line calling speak(). Watch Java look up which speak() to run, starting from each object's real class.
+prerequisites:
+  - oop/inheritance
+detail: simple
+variants:
+  - id: default
+    label: As written

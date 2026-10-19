@@ -1,6 +1,6 @@
 ---
-import Base from "../../layouts/Base.astro";
-import LessonList from "../../components/curriculum/LessonList.tsx";
+import Shell from "../../layouts/Shell.astro";
+import LessonList from "../../components/curriculum/LessonList.astro";
 import { toListItems } from "../../components/curriculum/items";
 import { loadCurriculum, type Track } from "../../content/curriculum";
 import { href } from "../../links";
@@ -17,14 +17,14 @@ interface Props {
 const { track, items } = Astro.props;
 ---
 
-<Base title={`${track.data.title} | Java Visuals`} description={track.data.description}>
+<Shell title={`${track.data.title} | Java Visuals`} description={track.data.description} current={track.id}>
   <main class="page">
     <nav class="crumbs" aria-label="Breadcrumb"><a href={href("/")}>Java Visuals</a></nav>
     <h1>{track.data.title}</h1>
     <p class="lede">{track.data.description}</p>
-    {items.length ? <LessonList client:load lessons={items} /> : <p>Lessons for this Track are on the way.</p>}
+    {items.length ? <LessonList lessons={items} /> : <p>Lessons for this Track are on the way.</p>}
   </main>
-</Base>
+</Shell>
 
 <style>
   .page {

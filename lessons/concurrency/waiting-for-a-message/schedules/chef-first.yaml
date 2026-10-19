@@ -1,0 +1,5 @@
+# The chef gets there first, so the waiter never has to wait.
+- run: main
+  until: join
+- run: Chef
+- run: Waiter

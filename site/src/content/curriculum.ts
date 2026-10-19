@@ -1,4 +1,5 @@
 import { getCollection, type CollectionEntry } from "astro:content";
+import { sceneRenderers } from "../renderers/scenes";
 
 export type TrackEntry = CollectionEntry<"tracks">;
 export type LessonEntry = CollectionEntry<"lessons">;
@@ -44,6 +45,12 @@ export async function loadCurriculum(): Promise<{ tracks: Track[]; lessons: Map<
         errors.push(`${l.id}: order ${l.data.order} is used by another Lesson in ${track.id}`);
       }
     });
+  }
+
+  for (const lesson of lessonEntries) {
+    if (lesson.data.view === "scene" && !(lesson.data.scene! in sceneRenderers)) {
+      errors.push(`${lesson.id}: no scene named "${lesson.data.scene}" (known: ${Object.keys(sceneRenderers).join(", ") || "none"})`);
+    }
   }
 
   const cycle = findCycle(lessonEntries);

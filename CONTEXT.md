@@ -1,19 +1,19 @@
 # Java Visuals
 
-An open-source platform that teaches Java — from its history through the JVM, memory, and concurrency — by animating what actually happens when code runs.
+An open-source platform that teaches Java — from its history and the basics through objects, the JVM, memory, and concurrency — by animating what actually happens when code runs.
 
 ## Language
 
 ### People
 
 **Learner**:
-Someone who knows basic Java syntax and wants to understand what happens underneath it; ranges from students to developers preparing for senior roles.
+Someone learning Java, from their first variable to understanding what happens underneath the code; ranges from students to developers preparing for senior roles.
 _Avoid_: User, student, beginner
 
 ### Curriculum
 
 **Track**:
-An ordered group of Lessons on one subject area (History, JVM, Memory, Concurrency…), shown in a suggested sequence.
+An ordered group of Lessons on one subject area (History, Basics, Objects and classes, JVM, Memory, Concurrency…), shown in a suggested sequence.
 _Avoid_: Course, module, section
 
 **Prerequisite**:
@@ -23,7 +23,7 @@ _Avoid_: Requirement, dependency
 ### Lessons
 
 **Lesson**:
-A single teachable unit on one concept, presented visually. Every Lesson is exactly one of: Timeline Lesson, Pipeline Lesson, Execution Lesson.
+A single teachable unit on one concept, presented visually. Every Lesson is exactly one of: Timeline Lesson, Animation Lesson, Execution Lesson.
 _Avoid_: Tutorial, page, chapter
 
 **Timeline Lesson**:
@@ -34,12 +34,16 @@ _Avoid_: History page
 One point on a Timeline Lesson: a Java release, or a **Turning Point** in Java's history that isn't a release (Oracle buying Sun, the move to six-month releases). A **Landmark** Version Stop (1.0, 1.2, 5, 8, 9, 11, 17, 21, 25) gets full treatment; others are brief.
 _Avoid_: Milestone, release card, event (in UI copy)
 
-**Pipeline Lesson**:
-A Lesson that animates a flow of stages (e.g. source → bytecode → class loading → JIT) with no Lesson Program executing.
-_Avoid_: Diagram lesson, flowchart
+**Animation Lesson**:
+A Lesson that plays a bespoke animated visual Step by Step with no code walkthrough, such as a flow of Stages (source → bytecode → class loading → JIT) or a reference card.
+_Avoid_: Pipeline lesson (former name), diagram lesson, flowchart
+
+**View**:
+How an Execution Lesson draws program state: **Variables** (default: the current method's variables), **Memory** (the Stack and Heap diagram), or a **Scene** (a bespoke real-life picture driven by the Trace).
+_Avoid_: Mode, layout
 
 **Stage**:
-One step of the flow in a Pipeline Lesson (e.g. "ClassLoader verifies bytecode").
+One step of the flow in an Animation Lesson (e.g. "ClassLoader verifies bytecode").
 _Avoid_: Phase
 
 **Execution Lesson**:
@@ -63,7 +67,7 @@ The recorded, ordered sequence of Steps produced by running one Variant of a Les
 _Avoid_: Recording, log, execution history
 
 **Step**:
-One moment in a Lesson that the Player can land on. In an Execution Lesson it comes from a Trace (current line plus the full state of every Stack and the Heap); in a Timeline Lesson it is a Version Stop; in a Pipeline Lesson it is a Stage.
+One moment in a Lesson that the Player can land on. In an Execution Lesson it comes from a Trace (current line plus the full state of every Stack and the Heap); in a Timeline Lesson it is a Version Stop; in an Animation Lesson it is a Stage.
 _Avoid_: Frame (reserved for the memory model), tick, snapshot, slide
 
 **Player**:

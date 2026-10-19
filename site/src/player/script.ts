@@ -1,6 +1,6 @@
 /**
  * What the Player needs from any Lesson's Steps, whatever renders them: a count and the Markers.
- * A Trace satisfies it; Timeline and Pipeline Lessons will too.
+ * A Trace satisfies it; Timeline and Animation Lessons will too.
  */
 export interface StepSource {
   steps: readonly unknown[];

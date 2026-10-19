@@ -1,7 +1,9 @@
 title: One Heap, many Stacks
 kind: execution
+view: scene
+scene: guest-book
 order: 1
-summary: Start two threads and watch each get its own Stack while both write into the same object on the Heap.
+summary: Two guests sign one guest book. Each keeps their own notes, but they write in the same shared book.
 prerequisites:
   - memory/objects-and-references
 detail: simple

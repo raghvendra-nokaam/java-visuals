@@ -1,0 +1,12 @@
+title: static, final and this
+kind: execution
+order: 4
+summary: Print two tickets. See which field belongs to each ticket and which belongs to the class itself, what final protects, and who this refers to.
+prerequisites:
+  - basics/control-flow
+detail: simple
+variants:
+  - id: default
+    label: static counter
+  - id: per-object
+    label: Without static

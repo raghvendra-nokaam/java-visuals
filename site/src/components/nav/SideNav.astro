@@ -1,0 +1,38 @@
+---
+import { loadCurriculum, trackOf } from "../../content/curriculum";
+import { href, lessonHref, trackHref } from "../../links";
+
+interface Props {
+  /** The Lesson or Track being shown, highlighted in the nav. */
+  current?: string;
+}
+const { current } = Astro.props;
+const { tracks } = await loadCurriculum();
+const currentTrack = current ? trackOf(current) : undefined;
+---
+
+<nav id="side-nav" class="side-nav" aria-label="Lessons">
+  <a class="side-nav-home" href={href("/")}>All tracks</a>
+  <ol class="side-nav-tracks">
+    {
+      tracks.map((track) => (
+        <li class="side-nav-track" data-current-track={track.id === currentTrack || undefined}>
+          <a class="side-nav-track-link" href={trackHref(track.id)} aria-current={current === track.id ? "page" : undefined}>
+            {track.data.title}
+          </a>
+          {track.lessons.length > 0 && (
+            <ol class="side-nav-lessons">
+              {track.lessons.map((lesson) => (
+                <li>
+                  <a href={lessonHref(lesson.id)} aria-current={current === lesson.id ? "page" : undefined}>
+                    {lesson.data.title}
+                  </a>
+                </li>
+              ))}
+            </ol>
+          )}
+        </li>
+      ))
+    }
+  </ol>
+</nav>

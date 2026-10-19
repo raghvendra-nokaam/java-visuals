@@ -1,10 +1,10 @@
-# A holds the lock (twice) and has read count when B arrives.
+# A holds the door key (twice) and has read the cabinet count when B arrives.
 - run: main
   until: join
 - run: A
   until: update
   steps: 1
 - run: B
-  until: blocked   # lock() makes B wait in the lock's queue
-- run: A           # A finishes and unlocks, which lets B in
+  until: blocked   # lock() makes B wait in the queue for the key
+- run: A           # A finishes and hands the key back, which lets B in
 - run: B

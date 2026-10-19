@@ -36,7 +36,12 @@
   }
 }
 
+:root[data-theme="light"] {
+  color-scheme: light;
+}
+
 :root[data-theme="dark"] {
+  color-scheme: dark;
   --paper: #121c27;
   --surface: #1a2735;
   --ink: #e2e9f0;

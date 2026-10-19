@@ -11,9 +11,9 @@ Before you start, skim two short documents:
 
 | Kind | Use it when | You write |
 |---|---|---|
-| **Execution** | The lesson is about what a running program does to memory | `Program.java`, `lesson.yaml`, `narration.md` |
+| **Execution** | The lesson is about what a running program does: its variables, objects, method calls or threads | `Program.java`, `lesson.yaml`, `narration.md` |
 | **Timeline** | The lesson is about how Java changed over time | `timeline.yaml`, `lesson.yaml`, `narration.md` |
-| **Pipeline** | The lesson is a flow of stages with no program state to record, like class loading | A bespoke visual in `site/src/renderers/pipeline/`, plus `lesson.yaml` and `narration.md` |
+| **Animation** | The idea is best shown without walking through code: a flow of stages like class loading, or a reference card like the keywords | A bespoke visual in `site/src/renderers/animation/`, plus `lesson.yaml` and `narration.md` |
 
 If you're unsure, it's probably an Execution Lesson.
 
@@ -28,7 +28,7 @@ lessons/<track>/<lesson-id>/
 └── narration.md
 ```
 
-Pick an `order` that places it within its Track, and list Prerequisites the Learner should have seen first.
+Pick an `order` that places it within its Track, and list Prerequisites the Learner should have seen first. Choose a `view` too ([lesson format](docs/lesson-format.md#views)): the default Variables view suits most lessons, `memory` is for lessons about the Stack and Heap, and `scene` is for a bespoke picture such as the Concurrency Track's.
 
 ### 2. Write the Lesson Program
 
@@ -41,10 +41,11 @@ The program *is* the lesson, so keep it small enough to read in one glance.
 - **Let nothing throw out of `main`.** An uncaught exception ends the recording early.
 - **One class per file when you have Variants.** A Variant's directory replaces whole files, so a helper class that lives inside `Program.java` would vanish from the Variant. See `lessons/memory/pass-by-value/` for the pattern.
 - **Prefer plain code over clever code.** A `switch` on an enum, for example, makes `javac` generate a hidden helper class that shows up as noise.
+- **Give every new object a home on the line that creates it.** The recorder sees objects through variables and fields, not the JVM's operand stack, so `Animal[] pets = { new Dog(), new Cat() };` briefly leaves the `Dog` unreachable and fails the build. Create the array first and fill it one element per line.
 
 ### 3. Mark the moments you'll talk about
 
-Add `// @mark name` to the end of each line where narration or a Predict Prompt should appear. The Player hides these comments. Use the same Marker names in every Variant wherever the moment is the same, so that switching Variant lands on the matching Step.
+Add `// @mark name` to the end of each line where narration or a Predict Prompt should appear. The Player hides these comments. Use the same Marker names in every Variant wherever the moment is the same, so that switching Variant lands on the matching Step. When a line runs more than once, `name@main#3` means its third hit, and returning to a line after a call it makes counts as a hit too: in a loop whose line calls a method, the second lap is hit 3.
 
 ### 4. Record and look at the real Steps
 
@@ -68,9 +69,9 @@ Each Version Stop in `timeline.yaml` is one Step. Keep the facts in the stop (ve
 
 **Every fact needs a primary source.** Check release dates and features against the OpenJDK project pages (`https://openjdk.org/projects/jdk/<version>/`) or the JEPs themselves, not blog posts. If a feature was a preview or an incubator in that release, say so.
 
-## Writing a Pipeline Lesson
+## Writing an Animation Lesson
 
-Pipelines all look different, so each one is a small React visual. Copy the structure of `site/src/renderers/pipeline/how-java-runs/`: a `steps.ts` that defines the Steps (their ids are the Markers), a view, and an `index.tsx` that adapts it to the Player. Register it in `steps.ts` and `renderers.ts`. If the lesson has a `Program.java`, `npm run record` writes its real bytecode to `traces/bytecode.txt`. Show that rather than typing bytecode by hand, and check any JVM facts on a real JDK 25 (for example `java -XX:+PrintFlagsFinal -version`).
+Animations all look different, so each one is a small React visual. Copy the structure of `site/src/renderers/animation/how-java-runs/` (or `keywords/` for one with no program): a `steps.ts` that defines the Steps (their ids are the Markers), a view, and an `index.tsx` that adapts it to the Player. Register it in `steps.ts` and `renderers.ts`. If the lesson has a `Program.java`, `npm run record` writes its real bytecode to `traces/bytecode.txt`. Show that rather than typing bytecode by hand, and check any JVM facts on a real JDK 25 (for example `java -XX:+PrintFlagsFinal -version`).
 
 ## Narration style
 
@@ -115,7 +116,7 @@ An empty array is the goal. Also tab through the page, and check it at 375px wid
 
 - [ ] `npm run build`, `npm run check` and `npm test` pass
 - [ ] I played the lesson end to end, in every Variant and Detail Level
-- [ ] Facts are checked against primary sources (Timeline and Pipeline Lessons)
+- [ ] Facts are checked against primary sources (Timeline and Animation Lessons)
 - [ ] Narration follows the style guide and uses the CONTEXT.md vocabulary
 - [ ] UI changes pass the accessibility checks above
 

@@ -1,0 +1,195 @@
+.scene-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(17rem, 1fr);
+  gap: 2rem;
+  align-items: start;
+}
+
+.scene-stage {
+  margin: 0;
+  background: var(--surface);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-card);
+  padding: 0.5rem;
+}
+
+.scene-stage svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.scene-side {
+  display: grid;
+  gap: 1rem;
+  align-content: start;
+}
+
+.scene-side .narration {
+  border-top: none;
+  padding-top: 0;
+}
+
+.scene-code summary {
+  cursor: pointer;
+  font-weight: 700;
+  color: var(--stack);
+  padding: 0.25rem 0;
+}
+
+.scene-code[open] summary {
+  margin-bottom: 0.5rem;
+}
+
+/* ---- scene drawing ---- */
+
+.scene-label {
+  font-family: var(--font-sans);
+  font-size: 17px;
+  font-weight: 700;
+  fill: var(--ink-soft);
+}
+
+.scene-big-number {
+  font-family: var(--font-mono);
+  font-size: 56px;
+  font-weight: 800;
+  fill: var(--ink);
+}
+
+.scene-surface {
+  fill: var(--paper);
+  stroke: var(--rule);
+  stroke-width: 2;
+}
+
+.scene-thing {
+  fill: var(--heap-tint);
+  stroke: var(--heap);
+  stroke-width: 3;
+}
+
+.scene-person-head,
+.scene-person-body {
+  stroke: var(--ink);
+  stroke-width: 2;
+}
+
+.scene-person[data-tone="a"] .scene-person-head,
+.scene-person[data-tone="a"] .scene-person-body {
+  fill: var(--stack);
+}
+
+.scene-person[data-tone="b"] .scene-person-head,
+.scene-person[data-tone="b"] .scene-person-body {
+  fill: var(--heap);
+}
+
+.scene-person[data-tone="c"] .scene-person-head,
+.scene-person[data-tone="c"] .scene-person-body {
+  fill: var(--ok);
+}
+
+.scene-person[data-tone="main"] .scene-person-head,
+.scene-person[data-tone="main"] .scene-person-body {
+  fill: var(--surface);
+}
+
+.scene-person[data-active] .scene-person-head {
+  stroke-width: 4;
+}
+
+.scene-person-name {
+  font-family: var(--font-sans);
+  font-size: 18px;
+  font-weight: 800;
+  fill: var(--ink);
+}
+
+.scene-person-role {
+  font-family: var(--font-mono);
+  font-size: 14px;
+  fill: var(--ink-soft);
+}
+
+.scene-badge rect {
+  fill: var(--surface);
+  stroke: var(--ink-soft);
+  stroke-width: 1.5;
+}
+
+.scene-badge text {
+  font-family: var(--font-sans);
+  font-size: 14px;
+  font-weight: 700;
+  fill: var(--ink-soft);
+}
+
+.scene-bubble rect,
+.scene-bubble circle,
+.scene-bubble path {
+  fill: var(--surface);
+  stroke: var(--ink);
+  stroke-width: 2;
+}
+
+.scene-bubble[data-kind="wait"] rect,
+.scene-bubble[data-kind="wait"] path {
+  stroke: var(--wrong);
+  stroke-dasharray: 5 4;
+}
+
+.scene-bubble text {
+  font-family: var(--font-mono);
+  font-size: 16px;
+  font-weight: 700;
+  fill: var(--ink);
+}
+
+.scene-flash {
+  animation: scene-flash 1.2s ease-out;
+}
+
+@keyframes scene-flash {
+  from {
+    fill: var(--stack);
+  }
+}
+
+.scene-banner rect {
+  stroke-width: 2.5;
+  fill: var(--surface);
+}
+
+.scene-banner[data-tone="bad"] rect {
+  stroke: var(--wrong);
+}
+
+.scene-banner[data-tone="good"] rect {
+  stroke: var(--ok);
+}
+
+.scene-banner text {
+  font-family: var(--font-sans);
+  font-size: 18px;
+  font-weight: 700;
+  fill: var(--ink);
+}
+
+.scene-key {
+  fill: var(--heap);
+  stroke: var(--ink);
+  stroke-width: 1.5;
+}
+
+@media (max-width: 64rem) {
+  .scene-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .scene-flash {
+    animation: none;
+  }
+}

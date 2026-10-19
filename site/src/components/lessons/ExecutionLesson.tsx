@@ -1,20 +1,25 @@
 import type { Trace } from "@java-visuals/trace-schema";
 import Player from "../../player/Player";
 import type { DetailLevel, LessonScript } from "../../player/script";
-import { markCompleted } from "../../progress";
-import { executionRenderer } from "../../renderers/execution";
+import { executionRenderer, variablesRenderer } from "../../renderers/execution";
+import { sceneRenderers } from "../../renderers/scenes";
 
-/** Client island for an Execution Lesson. Takes only serializable props; wires the renderer in on the client. */
+/**
+ * Client island for an Execution Lesson. Takes only serializable props and picks the renderer on the client:
+ * the Variables panel (default), the full Stack/Heap diagram, or a bespoke scene.
+ */
 export default function ExecutionLesson({
-  lessonId,
+  view,
+  scene,
   ...props
 }: {
-  lessonId: string;
   variants: Record<string, Trace>;
   variantLabels: Record<string, string>;
   script: LessonScript;
   defaultLevel: DetailLevel;
-  next?: { title: string; href: string };
+  view: "variables" | "memory" | "scene";
+  scene?: string;
 }) {
-  return <Player {...props} renderer={executionRenderer} offersJvmDetail smallScreenNote onReachEnd={() => markCompleted(lessonId)} />;
+  const renderer = view === "memory" ? executionRenderer : view === "scene" ? sceneRenderers[scene!]! : variablesRenderer;
+  return <Player {...props} renderer={renderer} offersJvmDetail={view === "memory"} smallScreenNote={view !== "variables"} />;
 }

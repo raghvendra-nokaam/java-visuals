@@ -1,7 +1,9 @@
 title: ReentrantLock
 kind: execution
+view: scene
+scene: records-room
 order: 3
-summary: A lock you take and release yourself. See who holds it, who's queued for it, why the same thread can take it twice, and how tryLock() gives up instead of waiting.
+summary: One key to the records room. See who holds it, who queues for it, why the same clerk can use it twice, and how tryLock() walks away instead of waiting.
 prerequisites:
   - concurrency/lost-update
 detail: simple

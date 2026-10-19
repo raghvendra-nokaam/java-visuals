@@ -1,0 +1,10 @@
+title: Operators and expressions
+kind: execution
+order: 2
+summary: Share 17 apples between 5 people. Integer division, the remainder, casting, ++ and +=, comparisons, and && that sometimes skips its right side.
+prerequisites:
+  - basics/variables-and-types
+detail: simple
+variants:
+  - id: default
+    label: As written

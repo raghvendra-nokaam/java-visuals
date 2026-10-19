@@ -1,0 +1,303 @@
+---
+import Base from "./Base.astro";
+import SideNav from "../components/nav/SideNav.astro";
+import { href } from "../links";
+
+interface Props {
+  title: string;
+  description?: string;
+  /** The Lesson or Track id this page shows, highlighted in the side nav. */
+  current?: string;
+}
+const { title, description, current } = Astro.props;
+---
+
+<Base title={title} description={description}>
+  <div class="shell" data-nav="open">
+    <header class="topbar">
+      <button type="button" class="nav-toggle" aria-controls="side-nav" aria-expanded="true">
+        <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"></path></svg>
+        <span>Lessons</span>
+      </button>
+      <a class="topbar-home" href={href("/")}>Java Visuals</a>
+      <button type="button" class="theme-toggle" aria-label="Switch to dark mode">
+        <svg class="theme-icon-moon" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"></path></svg>
+        <svg class="theme-icon-sun" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"></path></svg>
+      </button>
+    </header>
+    <SideNav current={current} />
+    <div class="shell-scrim" hidden></div>
+    <div class="shell-main">
+      <slot />
+    </div>
+  </div>
+</Base>
+
+<script>
+  // Open by default on wide screens, closed on narrow ones; remember the choice on this device only.
+  const KEY = "java-visuals:nav";
+  const shell = document.querySelector<HTMLElement>(".shell")!;
+  const toggle = document.querySelector<HTMLButtonElement>(".nav-toggle")!;
+  const scrim = document.querySelector<HTMLElement>(".shell-scrim")!;
+  const narrow = window.matchMedia("(max-width: 64rem)");
+  const read = () => {
+    try {
+      return localStorage.getItem(KEY);
+    } catch {
+      return null;
+    }
+  };
+  const set = (open: boolean, remember: boolean) => {
+    shell.dataset.nav = open ? "open" : "closed";
+    toggle.setAttribute("aria-expanded", String(open));
+    scrim.hidden = !(open && narrow.matches);
+    if (remember && !narrow.matches) {
+      try {
+        localStorage.setItem(KEY, open ? "open" : "closed");
+      } catch {
+        // A remembered preference is a nicety; carry on without it.
+      }
+    }
+  };
+  set(narrow.matches ? false : read() !== "closed", false);
+  toggle.addEventListener("click", () => set(shell.dataset.nav !== "open", true));
+  scrim.addEventListener("click", () => set(false, false));
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && narrow.matches && shell.dataset.nav === "open") {
+      set(false, false);
+      toggle.focus();
+    }
+  });
+  narrow.addEventListener("change", () => set(narrow.matches ? false : read() !== "closed", false));
+  // Light/dark: follows the system until the Learner picks one, then remembers it on this device.
+  const THEME_KEY = "java-visuals:theme";
+  const themeToggle = document.querySelector<HTMLButtonElement>(".theme-toggle")!;
+  const systemDark = window.matchMedia("(prefers-color-scheme: dark)");
+  const root = document.documentElement;
+  const isDark = () => (root.dataset.theme ? root.dataset.theme === "dark" : systemDark.matches);
+  const label = () => themeToggle.setAttribute("aria-label", isDark() ? "Switch to light mode" : "Switch to dark mode");
+  label();
+  systemDark.addEventListener("change", label);
+  themeToggle.addEventListener("click", () => {
+    const theme = isDark() ? "light" : "dark";
+    root.dataset.theme = theme;
+    try {
+      localStorage.setItem(THEME_KEY, theme);
+    } catch {
+      // Without storage the choice lasts for this page only.
+    }
+    label();
+  });
+
+  // Keep the current lesson in view in a long nav.
+  document.querySelector<HTMLElement>('.side-nav [aria-current="page"]')?.scrollIntoView({ block: "center" });
+</script>
+
+<style is:global>
+  .shell {
+    --nav-width: 17rem;
+    display: grid;
+    grid-template-columns: var(--nav-width) minmax(0, 1fr);
+    grid-template-rows: auto 1fr;
+    grid-template-areas: "top top" "nav main";
+    min-height: 100vh;
+  }
+
+  .shell[data-nav="closed"] {
+    grid-template-columns: 0 minmax(0, 1fr);
+  }
+
+  .topbar {
+    grid-area: top;
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.5rem 1rem;
+    background: var(--paper);
+    border-bottom: 1px solid var(--rule);
+  }
+
+  .nav-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    font: inherit;
+    font-weight: 700;
+    color: var(--ink);
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-radius: var(--radius-small);
+    padding: 0.35rem 0.75rem;
+    cursor: pointer;
+  }
+
+  .nav-toggle svg {
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2.25;
+    stroke-linecap: round;
+  }
+
+  .theme-toggle {
+    margin-left: auto;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.375rem;
+    height: 2.375rem;
+    color: var(--ink);
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-radius: var(--radius-small);
+    cursor: pointer;
+  }
+
+  .theme-toggle svg {
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  /* Show the theme the button switches to: a moon in light mode, a sun in dark mode. */
+  .theme-icon-sun {
+    display: none;
+  }
+
+  :root[data-theme="dark"] .theme-icon-sun {
+    display: block;
+  }
+
+  :root[data-theme="dark"] .theme-icon-moon {
+    display: none;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) .theme-icon-sun {
+      display: block;
+    }
+
+    :root:not([data-theme="light"]) .theme-icon-moon {
+      display: none;
+    }
+  }
+
+  .topbar-home {
+    font-weight: 800;
+    color: var(--ink);
+    text-decoration: none;
+  }
+
+  .side-nav {
+    grid-area: nav;
+    position: sticky;
+    top: 3.25rem;
+    align-self: start;
+    height: calc(100vh - 3.25rem);
+    overflow-y: auto;
+    padding: 1rem 0.75rem 2rem 1rem;
+    border-right: 1px solid var(--rule);
+    background: var(--paper);
+  }
+
+  .shell[data-nav="closed"] .side-nav {
+    visibility: hidden;
+    overflow: hidden;
+    padding: 0;
+    border: none;
+  }
+
+  .side-nav a {
+    color: var(--ink);
+    text-decoration: none;
+  }
+
+  .side-nav a:hover {
+    text-decoration: underline;
+  }
+
+  .side-nav-home {
+    display: inline-block;
+    margin-bottom: 0.75rem;
+    font-size: 0.9375rem;
+    color: var(--ink-soft) !important;
+  }
+
+  .side-nav-tracks,
+  .side-nav-lessons {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .side-nav-track + .side-nav-track {
+    margin-top: 1rem;
+  }
+
+  .side-nav-track-link {
+    display: block;
+    font-weight: 800;
+    padding: 0.125rem 0;
+  }
+
+  .side-nav-lessons {
+    margin-top: 0.25rem;
+    border-left: 2px solid var(--rule);
+  }
+
+  .side-nav-lessons a {
+    display: block;
+    padding: 0.25rem 0 0.25rem 0.75rem;
+    margin-left: -2px;
+    border-left: 2px solid transparent;
+    font-size: 0.9375rem;
+    line-height: 1.35;
+  }
+
+  .side-nav a[aria-current="page"] {
+    font-weight: 700;
+    color: var(--stack);
+    border-left-color: var(--stack);
+  }
+
+  .shell-main {
+    grid-area: main;
+    min-width: 0;
+  }
+
+  .shell-scrim {
+    display: none;
+  }
+
+  /* Narrow screens: the nav is a drawer over the page. */
+  @media (max-width: 64rem) {
+    .shell,
+    .shell[data-nav="closed"] {
+      grid-template-columns: minmax(0, 1fr);
+      grid-template-areas: "top" "main";
+    }
+
+    .side-nav {
+      position: fixed;
+      top: 3.25rem;
+      left: 0;
+      bottom: 0;
+      z-index: 30;
+      width: min(20rem, 85vw);
+      height: auto;
+      box-shadow: 0 0 0 100vmax transparent;
+    }
+
+    .shell-scrim:not([hidden]) {
+      display: block;
+      position: fixed;
+      inset: 3.25rem 0 0 0;
+      z-index: 25;
+      background: color-mix(in srgb, var(--ink) 35%, transparent);
+    }
+  }
+</style>

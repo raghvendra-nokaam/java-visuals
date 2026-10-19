@@ -1,0 +1,10 @@
+title: Decisions and loops
+kind: execution
+order: 3
+summary: Follow the highlighted line as it jumps. if/else picks one path, for and while repeat, and a switch expression picks a value.
+prerequisites:
+  - basics/operators
+detail: simple
+variants:
+  - id: default
+    label: As written

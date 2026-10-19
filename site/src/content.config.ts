@@ -28,9 +28,15 @@ const lessons = defineCollection({
   schema: z
     .strictObject({
     title: z.string(),
-    kind: z.enum(["timeline", "pipeline", "execution"]),
-    /** Pipeline Lessons only: which bespoke visual draws it (site/src/renderers/pipeline). */
+    kind: z.enum(["timeline", "animation", "execution"]),
+    /** Animation Lessons only: which bespoke visual draws it (site/src/renderers/animation). */
     visual: slug.optional(),
+    /**
+     * Execution Lessons only: how program state is drawn. `variables` (default) shows the current method's
+     * variables; `memory` the full Stack and Heap; `scene` a bespoke real-life scene named by `scene`.
+     */
+    view: z.enum(["variables", "memory", "scene"]).default("variables"),
+    scene: slug.optional(),
     order: z.number().int().positive(),
     summary: z.string(),
     prerequisites: z.array(z.string().regex(/^[a-z0-9-]+\/[a-z0-9-]+$/, "a Lesson id like memory/method-calls")).default([]),
@@ -42,9 +48,13 @@ const lessons = defineCollection({
       .refine((v) => v[0]!.id === "default", "the first Variant must be `default`")
       .refine((v) => new Set(v.map((x) => x.id)).size === v.length, "Variant ids must be unique"),
     })
-    .refine((l) => (l.kind === "pipeline") === (l.visual !== undefined), {
-      message: "`visual` is required for Pipeline Lessons and only allowed on them",
+    .refine((l) => (l.kind === "animation") === (l.visual !== undefined), {
+      message: "`visual` is required for Animation Lessons and only allowed on them",
       path: ["visual"],
+    })
+    .refine((l) => (l.view === "scene") === (l.scene !== undefined), {
+      message: "`scene` is required with `view: scene` and only allowed with it",
+      path: ["scene"],
     }),
 });
 

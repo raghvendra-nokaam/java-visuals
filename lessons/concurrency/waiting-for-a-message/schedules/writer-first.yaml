@@ -1,5 +1,0 @@
-# Writer gets there first, so Reader never has to wait.
-- run: main
-  until: join
-- run: Writer
-- run: Reader

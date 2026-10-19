@@ -28,8 +28,10 @@ description: One or two sentences shown on the home page and the Track page.
 
 ```yaml
 title: Method calls and Frames
-kind: execution     # execution | timeline | pipeline
-visual: how-java-runs  # Pipeline Lessons only: which bespoke visual draws it
+kind: execution     # execution | timeline | animation
+visual: how-java-runs  # Animation Lessons only: which bespoke visual draws it
+view: variables     # Execution Lessons only: variables (default) | memory | scene
+scene: ticket-agents  # with view: scene, which bespoke scene draws it
 order: 1            # suggested position within the Track; must be unique in the Track
 summary: One sentence shown in Track listings.
 prerequisites:      # Lesson ids; advisory links, never locks. Unknown ids and cycles fail the build.
@@ -66,11 +68,19 @@ stops:
 
 The stop holds the facts (what changed). `narration.md` holds the story (why it mattered) and the Predict Prompts. Timeline Lessons have one Variant and no JVM Detail Level, so their narration headings take neither suffix.
 
-## Pipeline Lessons
+## Animation Lessons
 
-A Pipeline Lesson (`kind: pipeline`) animates a flow of Stages with its own bespoke visual. Each one looks different, so there's no generic data format. Its Steps and drawing code live in `site/src/renderers/pipeline/<visual>/`, registered by name in `steps.ts` and `renderers.ts`, and `lesson.yaml` picks one with `visual:`. Step ids are the Markers `narration.md` anchors to.
+An Animation Lesson (`kind: animation`) is a bespoke animated visual played Step by Step, with no code walkthrough required: a flow of Stages, a reference card, a diagram that builds up. Each one looks different, so there's no generic data format. Its Steps and drawing code live in `site/src/renderers/animation/<visual>/`, registered by name in `steps.ts` and `renderers.ts`, and `lesson.yaml` picks one with `visual:`. Step ids are the Markers `narration.md` anchors to.
 
 If the lesson directory has a `Program.java`, `npm run record` writes its real `javap -c -p` listing to `traces/bytecode.txt`, so any bytecode the visual shows is exactly what `javac` produced.
+
+## Views
+
+An Execution Lesson's `view` decides how program state is drawn:
+
+- `variables` (the default): the methods currently running, and the current method's variables as labelled boxes, with objects as cards inside them. No Stack, Heap or arrows. Most lessons need nothing more.
+- `memory`: the full Stack and Heap diagram with References as arrows, and the Simple/JVM Detail Level switch. Use it when the lesson is *about* memory.
+- `scene`: a bespoke scene (`scene: <name>`, registered in `site/src/renderers/scenes/`), driven by the recorded Trace. The Concurrency Track uses real-life scenes; `method-lookup` works for any lesson about overriding, reading the class hierarchy from the Lesson Program itself. Shared helpers for reading a Trace and drawing people live in `scenes/kit/`.
 
 ## Variants
 
